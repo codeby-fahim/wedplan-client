@@ -1,2 +1,280 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-heading: var(--font-sans);
+  --font-sans: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* =====================================
+   WEDPLAN - LIGHT THEME
+===================================== */
+
+:root {
+  color-scheme: light;
+
+  /* Main Colors */
+  --background: 30 41.7% 95.3%;
+  --foreground: 0 0% 16.1%;
+
+  /* Brand */
+  --primary: 340.7 25.2% 43.5%;
+  --primary-foreground: 0 0% 100%;
+
+  /* Secondary */
+  --secondary: 24 34.9% 91.6%;
+  --secondary-foreground: 0 0% 16.1%;
+
+  /* Card */
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 16.1%;
+
+  /* Popover / Dropdown */
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 16.1%;
+
+  /* Muted */
+  --muted: 20 34.3% 86.3%;
+  --muted-foreground: 0 0% 40%;
+
+  /* Accent */
+  --accent: 340.7 25.2% 43.5%;
+  --accent-foreground: 0 0% 100%;
+
+  /* Status Colors */
+  --success: 142 55% 38%;
+  --success-foreground: 0 0% 100%;
+
+  --warning: 38 92% 50%;
+  --warning-foreground: 0 0% 15%;
+
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+
+  /* Borders & Inputs */
+  --border: 20 34.3% 86.3%;
+  --input: 20 34.3% 86.3%;
+  --ring: 340.7 25.2% 43.5%;
+
+  /* Sidebar */
+  --sidebar: 30 41.7% 95.3%;
+  --sidebar-foreground: 0 0% 16.1%;
+  --sidebar-primary: 340.7 25.2% 43.5%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 24 34.9% 91.6%;
+  --sidebar-accent-foreground: 0 0% 16.1%;
+  --sidebar-border: 20 34.3% 86.3%;
+  --sidebar-ring: 340.7 25.2% 43.5%;
+
+  /* Custom WedPlan Colors */
+  --brand: #8B5365;
+  --brand-hover: #6F3E50;
+  --brand-soft: #F4E9ED;
+
+  --surface: #FFFFFF;
+  --surface-muted: #F1E8E2;
+
+  --text-primary: #292929;
+  --text-secondary: #666666;
+
+  --page-background: #F8F3EE;
+}
+
+
+/* =====================================
+   WEDPLAN - DARK THEME
+===================================== */
+
+.dark {
+  color-scheme: dark;
+
+  /* Main Colors */
+  --background: 320 7% 8.4%;
+  --foreground: 330 15% 95%;
+
+  /* Brand */
+  --primary: 340.7 33.7% 65.7%;
+  --primary-foreground: 320 7% 8.4%;
+
+  /* Secondary */
+  --secondary: 333.3 11.7% 15.1%;
+  --secondary-foreground: 330 15% 95%;
+
+  /* Card */
+  --card: 330 10% 11.8%;
+  --card-foreground: 330 15% 95%;
+
+  /* Popover / Dropdown */
+  --popover: 330 10% 11.8%;
+  --popover-foreground: 330 15% 95%;
+
+  /* Muted */
+  --muted: 333.3 11.7% 15.1%;
+  --muted-foreground: 340 10% 70%;
+
+  /* Accent */
+  --accent: 340 20.7% 88.6%;
+  --accent-foreground: 320 7% 8.4%;
+
+  /* Status Colors */
+  --success: 142 55% 48%;
+  --success-foreground: 0 0% 100%;
+
+  --warning: 38 92% 55%;
+  --warning-foreground: 0 0% 10%;
+
+  --destructive: 0 65% 60%;
+  --destructive-foreground: 0 0% 100%;
+
+  /* Borders & Inputs */
+  --border: 333 12% 25%;
+  --input: 333 12% 25%;
+  --ring: 340.7 33.7% 65.7%;
+
+  /* Sidebar */
+  --sidebar: 320 7% 8.4%;
+  --sidebar-foreground: 330 15% 95%;
+  --sidebar-primary: 340.7 33.7% 65.7%;
+  --sidebar-primary-foreground: 320 7% 8.4%;
+  --sidebar-accent: 333.3 11.7% 15.1%;
+  --sidebar-accent-foreground: 330 15% 95%;
+  --sidebar-border: 333 12% 25%;
+  --sidebar-ring: 340.7 33.7% 65.7%;
+
+  /* Custom WedPlan Colors */
+  --brand: #C58A9D;
+  --brand-hover: #D9A3B4;
+  --brand-soft: #2B2226;
+
+  --surface: #211B1E;
+  --surface-muted: #2B2226;
+
+  --text-primary: #F5EFF1;
+  --text-secondary: #B9ADB2;
+
+  --page-background: #171416;
+}
+
+/* =====================================
+   GLOBAL STYLES
+===================================== */
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+  @apply bg-background text-foreground;
+
+  font-family: var(--font-body), sans-serif;
+
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading), serif;
+}
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+
+  ::selection {
+    background: var(--brand);
+    color: white;
+  }
+}
+
+
+/* =====================================
+   REUSABLE WEDPLAN CLASSES
+===================================== */
+
+@layer components {
+  .brand-button {
+    @apply inline-flex items-center justify-center rounded-md px-5 py-2.5 font-medium transition-all duration-200;
+    background-color: var(--brand);
+    color: white;
+  }
+
+  .brand-button:hover {
+    background-color: var(--brand-hover);
+  }
+
+  .brand-outline-button {
+    @apply inline-flex items-center justify-center rounded-md border px-5 py-2.5 font-medium transition-all duration-200;
+    border-color: var(--brand);
+    color: var(--brand);
+  }
+
+  .brand-outline-button:hover {
+    background-color: var(--brand-soft);
+  }
+
+  .theme-card {
+    @apply rounded-xl border shadow-sm transition-colors duration-200;
+    background-color: var(--surface);
+    color: var(--text-primary);
+    border-color: hsl(var(--border));
+  }
+
+  .muted-text {
+    color: var(--text-secondary);
+  }
+}
