@@ -26,9 +26,11 @@ The repo is an early scaffold:
 
 - `src/app/page.tsx` (the `/` landing page) is currently an empty `<div>`.
 - `src/app/layout.tsx` sets fonts, metadata, `ThemeProvider`, and the global `Navbar`.
-- `src/components/shared/Navbar.tsx` currently renders only the theme toggle.
-- `src/components/ui/button.tsx` is the only UI primitive installed (shadcn "base-nova" style on top of `@base-ui/react`).
-- Full light/dark design tokens and reusable brand classes exist in `src/app/globals.css`, but are mostly unused so far.
+- `src/components/shared/Navbar.tsx` renders the global navbar (brand, Home/Browse Services, theme toggle). Auth-dependent UI lives in `auth-nav.tsx` (desktop profile dropdown) and `MobileNav.tsx` (mobile menu); both use `authClient.useSession()` so the navbar updates immediately on sign-in/sign-out.
+- `src/app/(public)/sign-up/page.tsx` and `src/app/(public)/sign-in/page.tsx` render responsive auth flows (email/password + Google) via their forms in `src/components/shared/`. `src/app/api/post-login/route.ts` resolves the session role and redirects vendors to `/dashboard`, customers to `/`.
+- shadcn "base-nova" UI primitives live in `src/components/ui/` (button, input, label, field, radio-group, card, alert, separator, dropdown-menu, avatar) on top of `@base-ui/react`.
+- `src/lib/auth.ts` configures better-auth with MongoDB, custom user fields (`role`, `businessName`, `isBlocked`, `subscriptionPlan`, `subscriptionExpiresAt`), password rules, and role/admin safeguards.
+- Full light/dark design tokens and reusable brand classes exist in `src/app/globals.css`, and are used by the navbar and sign-up flow.
 
 ## Tech stack
 
@@ -51,20 +53,40 @@ The repo is an early scaffold:
 ```
 src/
 ├── app/
+│   ├── (public)/
+│   │   ├── profile/
+│   │   │   └── page.tsx        # Profile settings page
+│   │   ├── sign-in/
+│   │   │   └── page.tsx        # Responsive sign-in page
+│   │   └── sign-up/
+│   │       └── page.tsx        # Responsive sign-up page
+│   ├── api/
+│   │   ├── auth/[...all]/route.ts  # better-auth handler
+│   │   ├── post-login/route.ts     # Role-based post-login redirect
+│   │   └── upload-image/route.ts   # ImgBB image upload
 │   ├── globals.css        # Tailwind layers, design tokens, brand utility classes
 │   ├── icon.png
 │   ├── layout.tsx         # Root layout (fonts, metadata, ThemeProvider, Navbar)
 │   └── page.tsx           # Landing page (currently empty)
 ├── components/
 │   ├── providers/
-│   │   └── theme-provider.tsx  # Local next-themes wrapper (currently unused by layout)
+│   │   └── theme-provider.tsx  # Local next-themes wrapper (used by layout)
 │   ├── shared/
 │   │   ├── Navbar.tsx          # Global navigation shell
+│   │   ├── auth-nav.tsx        # Client component: desktop auth UI + profile dropdown
+│   │   ├── MobileNav.tsx       # Client component: responsive auth-aware menu
+│   │   ├── sign-in-form.tsx    # Client component: email/password + Google sign-in
+│   │   ├── sign-up-form.tsx    # Client component: email/password + Google sign-up
 │   │   └── theme-toggle.tsx    # Client component: light/dark switch
 │   └── ui/
-│       └── button.tsx          # shadcn/base-nova Button primitive
+│       ├── button.tsx          # shadcn/base-nova Button primitive
+│       └── ...                 # input, label, field, radio-group, card, alert, separator, dropdown-menu, avatar
 └── lib/
+    ├── auth.ts                 # better-auth server config + security hooks
+    ├── auth-client.ts          # better-auth React client
     └── utils.ts                # re-exports `cn` from the `cn` package
+src/hooks/
+└── use-sign-out.ts             # Shared client hook: sign out + redirect home
 public/
 └── logo.png
 ```
@@ -90,6 +112,7 @@ public/
 
 ### Styling and theming
 
+- **Required for every feature:** When building any feature or UI, use **shadcn UI** components and the **brand colors from `src/app/globals.css`**. Generate primitives with the shadcn CLI into `src/components/ui/` and compose them in `src/components/shared/`. Style with the brand tokens (`--brand`, `--brand-hover`, `--brand-soft`, `--page-background`, `--surface`, `--text-primary`, etc.) and the existing reusable classes — do not hand-roll custom UI primitives or introduce hardcoded colors.
 - Tailwind v4 is CSS-first: global styles, tokens, and custom classes live in `src/app/globals.css`. There is no `tailwind.config` file — `components.json` points Tailwind at `src/app/globals.css`.
 - Color tokens are HSL channel values (e.g. `--primary: 340.7 25.2% 43.5%`) used as `hsl(var(--primary))`; shadcn-style semantic names (`--background`, `--card`, `--muted`, `--border`, `--ring`, chart/sidebar tokens, etc.) are defined for both `:root` and `.dark`.
 - WedPlan brand tokens are plain CSS colors (`--brand`, `--brand-hover`, `--brand-soft`, `--surface`, `--surface-muted`, `--text-primary`, `--text-secondary`, `--page-background`) with matching light/dark values. Prefer these and the existing reusable classes in `@layer components`: `.brand-button`, `.brand-outline-button`, `.theme-card`, `.muted-text`.
@@ -110,7 +133,7 @@ Before writing Next.js code, consult `node_modules/next/dist/docs/01-app/` for t
 
 ## Known rough edges to be aware of
 
-- `src/app/layout.tsx` imports `ThemeProvider` directly from `next-themes`; the local wrapper at `src/components/providers/theme-provider.tsx` exists but is unused. If you need custom theme options, switch the layout to the local wrapper rather than adding a second provider.
-- `src/app/globals.css` `@theme inline` maps `--font-heading` to `--font-sans`, but the actual fonts are exposed as `--font-heading` / `--font-body` classes from `next/font`. Verify typography in the browser and fix that mapping if headings do not render in Playfair Display.
+- `src/app/layout.tsx` uses the local wrapper at `src/components/providers/theme-provider.tsx`, which sets `attribute="class"` so the `.dark` tokens in `globals.css` apply. Keep `suppressHydrationWarning` on `<html>` — next-themes adds the class after hydration.
+- `src/app/globals.css` maps Tailwind's `--font-sans` / `--font-serif` to the `next/font` variables (`--font-body` / `--font-heading`) inside `@theme inline`, and a custom `@utility font-heading` keeps shadcn headings in Playfair Display. Don't redeclare `--font-heading` inside `@theme inline` — it would shadow the `next/font` variable.
 - `src/components/shared/theme-toggle.tsx` has an ESLint suppression for `react-hooks/set-state-in-effect` (the `mounted` guard that avoids hydration mismatch); keep that guard when modifying the toggle.
 - No test runner or test scripts are configured. Add one deliberately if tests are required.
