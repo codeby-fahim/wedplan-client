@@ -7,6 +7,7 @@ import { LayoutDashboard, LogOut, Menu, Settings2, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useSignOut } from "@/hooks/use-sign-out";
 import { authClient } from "@/lib/auth-client";
+import { getDashboardHref } from "@/lib/dashboard-routes";
 
 export type NavLink = {
   label: string;
@@ -139,7 +140,7 @@ export default function MobileNav({ links }: MobileNavProps) {
               <ul className="flex flex-col">
                 <li>
                   <Link
-                    href="/dashboard"
+                    href={getDashboardHref(user.role)}
                     onClick={closeMenu}
                     className="flex items-center gap-2.5 rounded-lg px-4 py-2.5 text-sm font-medium text-(--text-primary) transition-colors hover:bg-(--brand-soft) hover:text-(--brand)"
                   >
@@ -149,7 +150,7 @@ export default function MobileNav({ links }: MobileNavProps) {
                 </li>
                 <li>
                   <Link
-                    href="/profile"
+                    href={`${getDashboardHref(user.role)}/profile`}
                     onClick={closeMenu}
                     className="flex items-center gap-2.5 rounded-lg px-4 py-2.5 text-sm font-medium text-(--text-primary) transition-colors hover:bg-(--brand-soft) hover:text-(--brand)"
                   >

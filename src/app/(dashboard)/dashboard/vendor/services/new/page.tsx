@@ -1,0 +1,12 @@
+import DashboardPage from "@/components/shared/dashboard-page";
+
+export const metadata = { title: "Add Service" };
+
+export default function VendorAddServicePage() {
+  return (
+    <DashboardPage
+      title="Add Service"
+      description="Publish a new wedding service for couples to discover."
+    />
+  );
+}

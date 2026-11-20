@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
+import { getDashboardHref } from "@/lib/dashboard-routes";
 import { cn } from "@/lib/utils";
 
 type Notice = {
@@ -112,14 +113,12 @@ export default function SignInForm({
 
       // The sign-in response includes the user's additional fields (role).
       const role = (result.data?.user as { role?: string } | undefined)?.role;
-      const destination = role === "vendor" ? "/dashboard" : "/";
+      const destination = getDashboardHref(role);
 
       setNotice({
         type: "success",
         title: "Welcome back!",
-        message: `Signed in successfully. Redirecting you to ${
-          role === "vendor" ? "your dashboard" : "WedPlan"
-        }...`,
+        message: `Signed in successfully. Redirecting you to your dashboard...`,
       });
 
       window.setTimeout(() => {
@@ -172,9 +171,9 @@ export default function SignInForm({
   const isBusy = submitting !== null;
 
   return (
-    <Card className="w-full border-[var(--brand)]/15 bg-[var(--surface)] shadow-[0_24px_70px_-30px_rgba(0,0,0,0.28)]">
+    <Card className="w-full border-(--brand)/15 bg-(--surface) shadow-[0_24px_70px_-30px_rgba(0,0,0,0.28)]">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl text-[var(--text-primary)]">
+        <CardTitle className="text-2xl text-(--text-primary)">
           Welcome back
         </CardTitle>
         <CardDescription>Sign in to continue planning your big day.</CardDescription>
@@ -187,13 +186,13 @@ export default function SignInForm({
             className={cn(
               "mb-5",
               notice.type === "success" &&
-                "border-[var(--brand)]/30 bg-[var(--brand-soft)] text-[var(--text-primary)]"
+                "border-(--brand)/30 bg-(--brand-soft) text-(--text-primary)"
             )}
           >
             {notice.type === "error" ? (
               <AlertCircle />
             ) : (
-              <Check className="text-[var(--brand)]" />
+              <Check className="text-(--brand)" />
             )}
             <AlertTitle>{notice.title}</AlertTitle>
             <AlertDescription>{notice.message}</AlertDescription>
@@ -225,7 +224,7 @@ export default function SignInForm({
                 <button
                   type="button"
                   onClick={() => setShowPassword((value) => !value)}
-                  className="text-xs font-normal text-[var(--brand)] hover:underline"
+                  className="text-xs font-normal text-(--brand) hover:underline"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? "Hide" : "Show"}
@@ -246,12 +245,12 @@ export default function SignInForm({
                 {showPassword ? (
                   <EyeOff
                     size={16}
-                    className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[var(--text-secondary)]"
+                    className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-(--text-secondary)"
                   />
                 ) : (
                   <Eye
                     size={16}
-                    className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[var(--text-secondary)]"
+                    className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-(--text-secondary)"
                   />
                 )}
               </div>
@@ -282,7 +281,7 @@ export default function SignInForm({
             variant="outline"
             onClick={handleGoogleSignIn}
             disabled={isBusy}
-            className="h-11 w-full rounded-full !border-[var(--brand)] !text-[var(--text-primary)] hover:!bg-[var(--brand-soft)]"
+            className="h-11 w-full rounded-full border-(--brand)! text-(--text-primary)! hover:bg-(--brand-soft)!"
           >
             {submitting === "google" ? (
               <Loader2 className="animate-spin" />
@@ -316,7 +315,7 @@ export default function SignInForm({
           New to WedPlan?{" "}
           <Link
             href="/sign-up"
-            className="font-medium text-[var(--brand)] hover:underline"
+            className="font-medium text-(--brand) hover:underline"
           >
             Create an account
           </Link>

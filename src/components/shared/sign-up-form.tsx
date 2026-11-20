@@ -40,6 +40,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { authClient } from "@/lib/auth-client";
+import { getDashboardHref } from "@/lib/dashboard-routes";
 import { cn } from "@/lib/utils";
 
 type Role = "vendor" | "customer";
@@ -195,13 +196,10 @@ export default function SignUpForm({
       setNotice({
         type: "success",
         title: "Welcome to WedPlan!",
-        message:
-          values.role === "vendor"
-            ? "Your vendor account is ready. Taking you to your dashboard..."
-            : "Your account is ready. Taking you home...",
+        message: "Your account is ready. Taking you to your dashboard...",
       });
 
-      const destination = values.role === "vendor" ? "/dashboard" : "/";
+      const destination = getDashboardHref(values.role);
       window.setTimeout(() => {
         router.push(destination);
         router.refresh();
@@ -225,7 +223,7 @@ export default function SignUpForm({
     setSubmitting("google");
 
     try {
-      const destination = values.role === "vendor" ? "/dashboard" : "/";
+      const destination = getDashboardHref(values.role);
       const result = await authClient.signIn.social({
         provider: "google",
         callbackURL: destination,

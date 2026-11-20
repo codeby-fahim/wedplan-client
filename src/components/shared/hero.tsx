@@ -182,6 +182,7 @@ export default function Hero() {
         >
           <Button
             size="lg"
+            nativeButton={false}
             render={<Link href="/services" />}
             className="group h-12 w-full cursor-pointer rounded-full bg-(--brand) px-7 text-[15px] font-semibold text-white shadow-lg shadow-(--brand)/25 transition-all duration-300 hover:bg-(--brand-hover) hover:shadow-xl hover:shadow-(--brand)/30 sm:h-13 sm:w-auto sm:px-8 sm:text-base"
           >
@@ -195,6 +196,7 @@ export default function Hero() {
           <Button
             variant="outline"
             size="lg"
+            nativeButton={false}
             render={<Link href="/sign-up" />}
             className="h-12 w-full cursor-pointer rounded-full border-white/30 bg-white/10 px-7 text-[15px] font-semibold text-white backdrop-blur-sm transition-all duration-300 hover:border-white/50 hover:bg-white/20 sm:h-13 sm:w-auto sm:px-8 sm:text-base"
           >

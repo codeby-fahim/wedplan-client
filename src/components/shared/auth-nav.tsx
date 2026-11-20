@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useSignOut } from "@/hooks/use-sign-out";
 import { authClient } from "@/lib/auth-client";
+import { getDashboardHref } from "@/lib/dashboard-routes";
 
 function getInitials(name?: string | null) {
   if (!name?.trim()) return "WP";
@@ -89,11 +90,15 @@ export default function AuthNav() {
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
 
-          <DropdownMenuItem render={<Link href="/dashboard" />}>
+          <DropdownMenuItem
+            render={<Link href={getDashboardHref(user.role)} />}
+          >
             <LayoutDashboard />
             Dashboard
           </DropdownMenuItem>
-          <DropdownMenuItem render={<Link href="/profile" />}>
+          <DropdownMenuItem
+            render={<Link href={`${getDashboardHref(user.role)}/profile`} />}
+          >
             <Settings2 />
             Profile Settings
           </DropdownMenuItem>
