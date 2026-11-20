@@ -24,11 +24,11 @@ This repository is the **frontend client** only (`wedplan-client`). There is no 
 
 The repo is an early scaffold:
 
-- `src/app/page.tsx` (the `/` landing page) is currently an empty `<div>`.
-- `src/app/layout.tsx` sets fonts, metadata, `ThemeProvider`, and the global `Navbar`.
+- `src/app/page.tsx` (the `/` landing page) renders the responsive animated `Hero` from `src/components/shared/hero.tsx` (built with the `motion` package and brand tokens).
+- `src/app/layout.tsx` sets fonts, metadata, `ThemeProvider`, and the global `Navbar` / `Footer` (from `Footer.tsx`).
 - `src/components/shared/Navbar.tsx` renders the global navbar (brand, Home/Browse Services, theme toggle). Auth-dependent UI lives in `auth-nav.tsx` (desktop profile dropdown) and `MobileNav.tsx` (mobile menu); both use `authClient.useSession()` so the navbar updates immediately on sign-in/sign-out.
 - `src/app/(public)/sign-up/page.tsx` and `src/app/(public)/sign-in/page.tsx` render responsive auth flows (email/password + Google) via their forms in `src/components/shared/`. `src/app/api/post-login/route.ts` resolves the session role and redirects vendors to `/dashboard`, customers to `/`.
-- shadcn "base-nova" UI primitives live in `src/components/ui/` (button, input, label, field, radio-group, card, alert, separator, dropdown-menu, avatar) on top of `@base-ui/react`.
+- shadcn "base-nova" UI primitives live in `src/components/ui/` (button, input, label, field, radio-group, card, alert, separator, dropdown-menu, avatar, badge) on top of `@base-ui/react`. Animation uses the `motion` package (`motion/react`) — the current name for framer-motion.
 - `src/lib/auth.ts` configures better-auth with MongoDB, custom user fields (`role`, `businessName`, `isBlocked`, `subscriptionPlan`, `subscriptionExpiresAt`), password rules, and role/admin safeguards.
 - Full light/dark design tokens and reusable brand classes exist in `src/app/globals.css`, and are used by the navbar and sign-up flow.
 
@@ -73,6 +73,8 @@ src/
 │   │   └── theme-provider.tsx  # Local next-themes wrapper (used by layout)
 │   ├── shared/
 │   │   ├── Navbar.tsx          # Global navigation shell
+│   │   ├── Footer.tsx          # Global footer (brand, links, contact, socials)
+│   │   ├── hero.tsx            # Client component: animated landing hero (motion)
 │   │   ├── auth-nav.tsx        # Client component: desktop auth UI + profile dropdown
 │   │   ├── MobileNav.tsx       # Client component: responsive auth-aware menu
 │   │   ├── sign-in-form.tsx    # Client component: email/password + Google sign-in

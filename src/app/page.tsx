@@ -1,8 +1,9 @@
+import Hero from "@/components/shared/hero";
 
 export default function Home() {
   return (
-    <div >
-      
-    </div>
+    <main className="flex-1">
+      <Hero />
+    </main>
   );
 }
