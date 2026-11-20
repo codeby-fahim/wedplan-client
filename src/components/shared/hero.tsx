@@ -101,7 +101,7 @@ export default function Hero() {
   return (
     <section
       ref={sectionRef}
-      className="relative isolate flex min-h-[92svh] items-center justify-center overflow-hidden sm:min-h-[100svh]"
+      className="relative isolate flex min-h-[92svh] items-center justify-center overflow-hidden sm:min-h-svh"
     >
       {/* ---- Background image (parallax) ---- */}
       <motion.div
@@ -123,13 +123,13 @@ export default function Hero() {
       {/* ---- Dark gradient overlay for text legibility ---- */}
       <div
         aria-hidden="true"
-        className="absolute inset-0 -z-10 bg-gradient-to-b from-black/60 via-black/50 to-black/70"
+        className="absolute inset-0 -z-10 bg-linear-to-b from-black/60 via-black/50 to-black/70"
       />
 
       {/* ---- Soft brand tint ---- */}
       <div
         aria-hidden="true"
-        className="absolute inset-0 -z-10 bg-[var(--brand)]/10 mix-blend-multiply"
+        className="absolute inset-0 -z-10 bg-(--brand)/10 mix-blend-multiply"
       />
 
       {/* ---- Floating decorative particles ---- */}
@@ -140,7 +140,7 @@ export default function Hero() {
         {/* Badge */}
         <motion.div {...rise(0.1, reduceMotion)}>
           <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3.5 py-1.5 text-[11px] font-medium tracking-wide text-white/90 backdrop-blur-sm sm:px-4 sm:text-sm">
-            <Heart size={14} className="text-[var(--brand-soft)]" fill="currentColor" />
+            <Heart size={14} className="text-(--brand-soft)" fill="currentColor" />
             Your Dream Wedding Starts Here
           </span>
         </motion.div>
@@ -152,13 +152,13 @@ export default function Hero() {
         >
           Plan Your Perfect{" "}
           <span className="relative inline-block">
-            <span className="relative z-10 bg-gradient-to-r from-[var(--brand-soft)] via-white to-[var(--brand-soft)] bg-clip-text text-transparent">
+            <span className="relative z-10 bg-linear-to-r from-(--brand-soft) via-white to-(--brand-soft) bg-clip-text text-transparent">
               Wedding Day
             </span>
             {/* Decorative underline */}
             <motion.span
               aria-hidden="true"
-              className="absolute -bottom-1 left-0 h-[2px] w-full rounded-full bg-gradient-to-r from-transparent via-[var(--brand-soft)] to-transparent sm:-bottom-2 sm:h-1"
+              className="absolute -bottom-1 left-0 h-0.5 w-full rounded-full bg-linear-to-r from-transparent via-(--brand-soft) to-transparent sm:-bottom-2 sm:h-1"
               initial={reduceMotion ? undefined : { scaleX: 0 }}
               animate={reduceMotion ? undefined : { scaleX: 1 }}
               transition={{ duration: 0.8, delay: 0.7, ease: EASE }}
@@ -183,7 +183,7 @@ export default function Hero() {
           <Button
             size="lg"
             render={<Link href="/services" />}
-            className="group h-12 w-full cursor-pointer rounded-full bg-[var(--brand)] px-7 text-[15px] font-semibold text-white shadow-lg shadow-[var(--brand)]/25 transition-all duration-300 hover:bg-[var(--brand-hover)] hover:shadow-xl hover:shadow-[var(--brand)]/30 sm:h-13 sm:w-auto sm:px-8 sm:text-base"
+            className="group h-12 w-full cursor-pointer rounded-full bg-(--brand) px-7 text-[15px] font-semibold text-white shadow-lg shadow-(--brand)/25 transition-all duration-300 hover:bg-(--brand-hover) hover:shadow-xl hover:shadow-(--brand)/30 sm:h-13 sm:w-auto sm:px-8 sm:text-base"
           >
             Explore Wedding Services
             <ArrowRight
