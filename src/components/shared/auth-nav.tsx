@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -72,15 +73,20 @@ export default function AuthNav() {
           />
         </DropdownMenuTrigger>
 
-        <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuLabel className="flex flex-col gap-0.5">
-            <span className="truncate text-[var(--text-primary)]">
-              {user.name ?? "Account"}
-            </span>
-            <span className="muted-text truncate text-xs font-normal">
-              {user.email}
-            </span>
-          </DropdownMenuLabel>
+        <DropdownMenuContent
+          align="end"
+          className="w-60 rounded-2xl border border-[var(--brand)]/20 bg-[var(--surface)] p-2 shadow-xl"
+        >
+          <DropdownMenuGroup>
+            <DropdownMenuLabel className="flex flex-col gap-0.5 rounded-lg bg-[var(--brand-soft)] px-3 py-2">
+              <span className="truncate text-[var(--text-primary)]">
+                {user.name ?? "Account"}
+              </span>
+              <span className="muted-text truncate text-xs font-normal">
+                {user.email}
+              </span>
+            </DropdownMenuLabel>
+          </DropdownMenuGroup>
           <DropdownMenuSeparator />
 
           <DropdownMenuItem render={<Link href="/dashboard" />}>
