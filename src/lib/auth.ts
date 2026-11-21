@@ -38,6 +38,8 @@ function assertValidPassword(value: unknown): void {
 }
 
 export const auth = betterAuth({
+  // Be explicit on Vercel — never rely on framework origin inference.
+  baseURL: process.env.BETTER_AUTH_URL,
   database: mongodbAdapter(db, { client }),
 
   emailAndPassword: {
