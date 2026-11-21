@@ -3,23 +3,41 @@
 import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { toast } from "sonner";
 import {
   AlertCircle,
   CheckCircle2,
   Clock3,
+  Crown,
   ImageIcon,
   MapPin,
+  Pencil,
   Plus,
   RefreshCw,
+  Trash2,
   XCircle,
 } from "lucide-react";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
+  deleteService,
   getMyServices,
+  getVendorStats,
+  setServiceAvailability,
   type ServiceRecord,
   type ServiceStatus,
+  type VendorStats,
 } from "@/lib/api/service-api";
 import { cn } from "@/lib/utils";
 
@@ -57,7 +75,7 @@ function StatusBadge({ status }: { status: ServiceStatus }) {
 }
 
 function formatPrice(price: number) {
-  return `৳ ${new Intl.NumberFormat("en-BD").format(price)}`;
+  return `$${new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(price)}`;
 }
 
 function formatDate(value: string) {
@@ -72,8 +90,11 @@ function formatDate(value: string) {
 
 export default function VendorServicesList() {
   const [services, setServices] = useState<ServiceRecord[]>([]);
+  const [stats, setStats] = useState<VendorStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<ServiceRecord | null>(null);
   const [requestId, setRequestId] = useState(0);
 
   const load = useCallback(async (active: boolean) => {
@@ -81,8 +102,14 @@ export default function VendorServicesList() {
     setError(null);
 
     try {
-      const data = await getMyServices();
-      if (active) setServices(data);
+      const [serviceData, statsData] = await Promise.all([
+        getMyServices(),
+        getVendorStats(),
+      ]);
+      if (active) {
+        setServices(serviceData);
+        setStats(statsData);
+      }
     } catch (err) {
       if (active) {
         setError(
@@ -105,7 +132,63 @@ export default function VendorServicesList() {
     };
   }, [load, requestId]);
 
-  const retry = () => setRequestId((current) => current + 1);
+  const refresh = () => setRequestId((current) => current + 1);
+
+  const toggleAvailability = async (service: ServiceRecord) => {
+    setBusyId(service.id);
+
+    try {
+      const updated = await setServiceAvailability(service.id, !service.isActive);
+      const nextServices = services.map((item) =>
+        item.id === updated.id ? updated : item
+      );
+      setServices(nextServices);
+      setStats((current) =>
+        current
+          ? {
+              ...current,
+              activeServices: nextServices.filter(
+                (item) => item.status === "approved" && item.isActive
+              ).length,
+            }
+          : current
+      );
+      toast.success(updated.isActive ? "Service is now active" : "Service is now inactive", {
+        description: updated.serviceName,
+      });
+    } catch (err) {
+      toast.error("Could not change availability", {
+        description: err instanceof Error ? err.message : "Please try again.",
+      });
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+
+    const target = pendingDelete;
+    setBusyId(target.id);
+    setPendingDelete(null);
+
+    try {
+      await deleteService(target.id);
+      toast.success("Service deleted", { description: target.serviceName });
+      refresh();
+    } catch (err) {
+      toast.error("Could not delete service", {
+        description: err instanceof Error ? err.message : "Please try again.",
+      });
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const atFreeLimit =
+    stats !== null &&
+    stats.activeServiceLimit !== null &&
+    stats.activeServices >= stats.activeServiceLimit;
 
   return (
     <div className="space-y-5">
@@ -122,6 +205,19 @@ export default function VendorServicesList() {
           <Plus /> Add Service
         </Link>
       </div>
+
+      {!loading && stats && atFreeLimit && (
+        <div className="flex items-start gap-2 rounded-lg border border-(--brand)/20 bg-(--brand-soft)/50 px-3 py-2.5 text-xs text-(--text-secondary)">
+          <Crown size={15} className="mt-0.5 shrink-0 text-(--brand)" />
+          <p>
+            You&apos;ve reached the free plan limit of{" "}
+            <strong className="text-(--text-primary)">
+              {stats.activeServiceLimit} active services
+            </strong>
+            . Upgrade to Premium to publish unlimited services.
+          </p>
+        </div>
+      )}
 
       {loading && (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -152,7 +248,7 @@ export default function VendorServicesList() {
               <p className="muted-text text-sm">{error}</p>
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={retry} className="rounded-full">
+          <Button variant="outline" size="sm" onClick={refresh} className="rounded-full">
             <RefreshCw /> Retry
           </Button>
         </div>
@@ -182,11 +278,12 @@ export default function VendorServicesList() {
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {services.map((service) => {
             const cover = service.images?.[0];
+            const isBusy = busyId === service.id;
 
             return (
               <article
                 key={service.id}
-                className="theme-card group overflow-hidden transition-shadow hover:shadow-md"
+                className="theme-card group flex flex-col overflow-hidden transition-shadow hover:shadow-md"
               >
                 <div className="relative aspect-video bg-(--surface-muted)">
                   {cover ? (
@@ -213,7 +310,7 @@ export default function VendorServicesList() {
                   )}
                 </div>
 
-                <div className="space-y-3 p-4">
+                <div className="flex flex-1 flex-col space-y-3 p-4">
                   <div>
                     <h3 className="font-heading text-base font-semibold text-(--text-primary)">
                       {service.serviceName}
@@ -240,12 +337,65 @@ export default function VendorServicesList() {
                       {service.isActive ? "Active listing" : "Inactive"}
                     </span>
                   </div>
+
+                  <div className="mt-auto flex flex-wrap gap-2 pt-1">
+                    <Link
+                      href={`/dashboard/vendor/services/${service.id}/edit`}
+                      className={cn(
+                        buttonVariants({ variant: "outline", size: "sm" }),
+                        "rounded-full"
+                      )}
+                    >
+                      <Pencil /> Edit
+                    </Link>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={isBusy}
+                      onClick={() => void toggleAvailability(service)}
+                      className="rounded-full"
+                    >
+                      {service.isActive ? "Pause" : "Activate"}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={isBusy}
+                      onClick={() => setPendingDelete(service)}
+                      className="rounded-full text-destructive hover:text-destructive"
+                    >
+                      <Trash2 /> Delete
+                    </Button>
+                  </div>
                 </div>
               </article>
             );
           })}
         </div>
       )}
+
+      <AlertDialog
+        open={Boolean(pendingDelete)}
+        onOpenChange={(open) => {
+          if (!open) setPendingDelete(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this service?</AlertDialogTitle>
+            <AlertDialogDescription>
+              &quot;{pendingDelete?.serviceName}&quot; and its booking requests
+              will be permanently removed. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => void confirmDelete()}>
+              Delete service
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

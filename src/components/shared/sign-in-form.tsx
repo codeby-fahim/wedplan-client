@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
-import { getDashboardHref } from "@/lib/dashboard-routes";
+import { getSafeCallbackHref } from "@/lib/dashboard-routes";
 import { cn } from "@/lib/utils";
 
 type Notice = {
@@ -50,6 +50,15 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 function oauthNotice(error?: string): Notice | null {
   if (!error) return null;
 
+  if (error === "blocked") {
+    return {
+      type: "error",
+      title: "Account blocked",
+      message:
+        "Your account has been blocked. Please contact WedPlan support for help.",
+    };
+  }
+
   return {
     type: "error",
     title: error === "session" ? "Session expired" : "Google sign-in failed",
@@ -62,8 +71,10 @@ function oauthNotice(error?: string): Notice | null {
 
 export default function SignInForm({
   oauthError,
+  callbackUrl,
 }: {
   oauthError?: string;
+  callbackUrl?: string;
 }) {
   const router = useRouter();
 
@@ -113,7 +124,7 @@ export default function SignInForm({
 
       // The sign-in response includes the user's additional fields (role).
       const role = (result.data?.user as { role?: string } | undefined)?.role;
-      const destination = getDashboardHref(role);
+      const destination = getSafeCallbackHref(callbackUrl, role);
 
       setNotice({
         type: "success",
@@ -141,11 +152,16 @@ export default function SignInForm({
     setSubmitting("google");
 
     try {
-      // A shared server endpoint reads the session and redirects by role.
+      // A shared server endpoint reads the session, then honours a safe
+      // dashboard deep link if the proxy supplied one.
+      const postLogin = callbackUrl
+        ? `/api/post-login?callbackUrl=${encodeURIComponent(callbackUrl)}`
+        : "/api/post-login";
+
       const result = await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/api/post-login",
-        newUserCallbackURL: "/api/post-login",
+        callbackURL: postLogin,
+        newUserCallbackURL: postLogin,
         errorCallbackURL: "/sign-in?error=google",
       });
 

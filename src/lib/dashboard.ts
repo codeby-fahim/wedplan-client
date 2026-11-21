@@ -25,6 +25,12 @@ export async function getSession() {
 export async function requireSession() {
   const session = await getSession();
   if (!session) redirect("/sign-in");
+
+  // Mirror the API server: blocked accounts must not reach any dashboard.
+  if ((session.user as { isBlocked?: boolean }).isBlocked) {
+    redirect("/sign-in?error=blocked");
+  }
+
   return session;
 }
 

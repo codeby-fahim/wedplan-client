@@ -44,8 +44,15 @@ export const auth = betterAuth({
     enabled: true,
     minPasswordLength: 6,
   },
+  // These must match JWT_ISSUER / JWT_AUDIENCE on the API server — it
+  // verifies both claims on every authenticated request.
   plugins: [
-    jwt(),
+    jwt({
+      jwt: {
+        issuer: process.env.JWT_ISSUER ?? "wedplan-server",
+        audience: process.env.JWT_AUDIENCE ?? "wedplan-client",
+      },
+    }),
   ],
 
   user: {

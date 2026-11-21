@@ -24,7 +24,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const apiKey = process.env.NEXT_PUBLIC_IMGBB_API_KEY;
+    // Server-only secret — never expose this with a NEXT_PUBLIC_ prefix.
+    const apiKey = process.env.IMGBB_API_KEY;
     if (!apiKey) {
       return Response.json(
         { error: "Image upload is not configured." },

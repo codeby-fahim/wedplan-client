@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth";
-import { getDashboardHref } from "@/lib/dashboard-routes";
+import { getSafeCallbackHref } from "@/lib/dashboard-routes";
 
 /** Shared post-authentication landing: resolves the role server-side and
  *  redirects vendors and customers to their own areas. Used by the Google
@@ -12,7 +12,8 @@ export async function GET(request: Request) {
   }
 
   const role = (session.user as { role?: string }).role;
-  const destination = getDashboardHref(role);
+  const callbackUrl = new URL(request.url).searchParams.get("callbackUrl");
+  const destination = getSafeCallbackHref(callbackUrl, role);
 
   return Response.redirect(new URL(destination, request.url));
 }

@@ -23,3 +23,19 @@ export function getDashboardHref(role: unknown): string {
   if (role === "admin") return "/dashboard/admin";
   return "/dashboard/customer";
 }
+
+/** Keep only internal deep links inside the signed-in user's own dashboard.
+ *  Anything else falls back to that role's dashboard overview. */
+export function getSafeCallbackHref(callbackUrl: unknown, role: unknown): string {
+  const home = getDashboardHref(role);
+
+  if (
+    typeof callbackUrl !== "string" ||
+    !/^\/dashboard\/[A-Za-z0-9/_-]*$/.test(callbackUrl) ||
+    (callbackUrl !== home && !callbackUrl.startsWith(`${home}/`))
+  ) {
+    return home;
+  }
+
+  return callbackUrl;
+}

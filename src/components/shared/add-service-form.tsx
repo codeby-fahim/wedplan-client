@@ -36,7 +36,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { addService } from "@/lib/api/service-api";
+import {
+  addService,
+  updateService,
+  type ServicePayload,
+  type ServiceRecord,
+} from "@/lib/api/service-api";
+import { SERVICE_CATEGORIES } from "@/lib/service-categories";
 import { cn } from "@/lib/utils";
 
 type FormValues = {
@@ -49,30 +55,38 @@ type FormValues = {
 
 type FormErrors = Partial<Record<keyof FormValues | "images", string>>;
 
-type ImageEntry = { file: File; preview: string };
-
-const CATEGORIES = [
-  "Photography & Videography",
-  "Venue & Decoration",
-  "Catering & Cake",
-  "Bridal & Grooming",
-  "Music & Entertainment",
-  "Wedding Planning",
-  "Transport & Logistics",
-  "Other",
-] as const;
+type ImageEntry = { file?: File; preview: string; isNew: boolean };
 
 const MAX_IMAGES = 3;
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
-const initialValues: FormValues = {
+const emptyValues: FormValues = {
   serviceName: "",
   category: "",
   description: "",
   price: "",
   location: "",
 };
+
+function valuesFromService(service?: ServiceRecord): FormValues {
+  if (!service) return emptyValues;
+  return {
+    serviceName: service.serviceName,
+    category: service.category,
+    description: service.description,
+    price: String(service.price),
+    location: service.location,
+  };
+}
+
+function imagesFromService(service?: ServiceRecord): ImageEntry[] {
+  if (!service) return [];
+  return (service.images ?? []).map((url) => ({
+    preview: url,
+    isNew: false,
+  }));
+}
 
 function validate(values: FormValues, images: ImageEntry[]): FormErrors {
   const errors: FormErrors = {};
@@ -100,20 +114,31 @@ function fieldErrors(message?: string) {
   return message ? [{ message }] : undefined;
 }
 
-export default function AddServiceForm() {
+export default function AddServiceForm({
+  initialService,
+  onSaved,
+}: {
+  initialService?: ServiceRecord;
+  onSaved?: () => void;
+}) {
   const router = useRouter();
+  const isEdit = Boolean(initialService);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const previewsRef = useRef<string[]>([]);
+  const objectUrlsRef = useRef<string[]>([]);
 
-  const [values, setValues] = useState<FormValues>(initialValues);
+  const [values, setValues] = useState<FormValues>(() =>
+    valuesFromService(initialService)
+  );
   const [errors, setErrors] = useState<FormErrors>({});
-  const [images, setImages] = useState<ImageEntry[]>([]);
+  const [images, setImages] = useState<ImageEntry[]>(() =>
+    imagesFromService(initialService)
+  );
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    const currentPreviews = previewsRef.current;
+    const createdUrls = objectUrlsRef.current;
     return () => {
-      currentPreviews.forEach((preview) => URL.revokeObjectURL(preview));
+      createdUrls.forEach((url) => URL.revokeObjectURL(url));
     };
   }, []);
 
@@ -148,11 +173,11 @@ export default function AddServiceForm() {
 
     const accepted = valid.slice(0, Math.max(available, 0));
     if (accepted.length > 0) {
-      const entries = accepted.map((file) => ({
-        file,
-        preview: URL.createObjectURL(file),
-      }));
-      previewsRef.current = [...previewsRef.current, ...entries.map((entry) => entry.preview)];
+      const entries = accepted.map((file) => {
+        const preview = URL.createObjectURL(file);
+        objectUrlsRef.current.push(preview);
+        return { file, preview, isNew: true };
+      });
       setImages((current) => [...current, ...entries]);
     }
 
@@ -161,17 +186,20 @@ export default function AddServiceForm() {
   };
 
   const removeImage = (preview: string) => {
-    URL.revokeObjectURL(preview);
-    previewsRef.current = previewsRef.current.filter((item) => item !== preview);
+    const entry = images.find((item) => item.preview === preview);
+    if (entry?.isNew) {
+      URL.revokeObjectURL(preview);
+      objectUrlsRef.current = objectUrlsRef.current.filter((url) => url !== preview);
+    }
     setImages((current) => current.filter((item) => item.preview !== preview));
     setErrors((current) => ({ ...current, images: undefined }));
   };
 
   const resetForm = () => {
-    previewsRef.current.forEach((preview) => URL.revokeObjectURL(preview));
-    previewsRef.current = [];
-    setImages([]);
-    setValues(initialValues);
+    objectUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+    objectUrlsRef.current = [];
+    setImages(imagesFromService(initialService));
+    setValues(valuesFromService(initialService));
     setErrors({});
   };
 
@@ -192,8 +220,13 @@ export default function AddServiceForm() {
       const uploadedImages: string[] = [];
 
       for (const entry of images) {
+        if (!entry.isNew) {
+          uploadedImages.push(entry.preview);
+          continue;
+        }
+
         const uploadData = new FormData();
-        uploadData.append("file", entry.file);
+        uploadData.append("file", entry.file as File);
 
         const response = await fetch("/api/upload-image", {
           method: "POST",
@@ -211,25 +244,34 @@ export default function AddServiceForm() {
         uploadedImages.push(result.url);
       }
 
-      await addService({
+      const payload: ServicePayload = {
         serviceName: values.serviceName.trim(),
         category: values.category,
         description: values.description.trim(),
         price: Number(values.price),
         location: values.location.trim(),
         images: uploadedImages,
-      });
+      };
 
-      toast.success("Service submitted!", {
-        description:
-          "It is now pending admin approval. You can track the status in My Services.",
-      });
-
-      resetForm();
-      router.push("/dashboard/vendor/services");
-      router.refresh();
+      if (isEdit && initialService) {
+        await updateService(initialService.id, payload);
+        toast.success("Service updated!", {
+          description: "Your changes have been saved.",
+        });
+        router.refresh();
+        onSaved?.();
+      } else {
+        await addService(payload);
+        toast.success("Service submitted!", {
+          description:
+            "It is now pending admin approval. You can track the status in My Services.",
+        });
+        resetForm();
+        router.push("/dashboard/vendor/services");
+        router.refresh();
+      }
     } catch (error) {
-      toast.error("Submission failed", {
+      toast.error(isEdit ? "Could not update service" : "Submission failed", {
         description:
           error instanceof Error
             ? error.message
@@ -244,10 +286,12 @@ export default function AddServiceForm() {
     <Card className="mx-auto w-full max-w-3xl border-(--brand)/15 bg-(--surface)">
       <CardHeader>
         <CardTitle className="font-heading text-xl text-(--text-primary)">
-          Service details
+          {isEdit ? "Edit service" : "Service details"}
         </CardTitle>
         <CardDescription>
-          Tell couples what you offer. Fields marked with * are required.
+          {isEdit
+            ? "Update the details couples see. Fields marked with * are required."
+            : "Tell couples what you offer. Fields marked with * are required."}
         </CardDescription>
       </CardHeader>
 
@@ -278,7 +322,7 @@ export default function AddServiceForm() {
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
                   <SelectContent>
-                    {CATEGORIES.map((category) => (
+                    {SERVICE_CATEGORIES.map((category) => (
                       <SelectItem key={category} value={category}>
                         {category}
                       </SelectItem>
@@ -308,7 +352,7 @@ export default function AddServiceForm() {
 
             <div className="grid gap-5 sm:grid-cols-2">
               <Field data-invalid={Boolean(errors.price)}>
-                <FieldLabel htmlFor="price">Price (BDT) *</FieldLabel>
+                <FieldLabel htmlFor="price">Price (USD) *</FieldLabel>
                 <Input
                   id="price"
                   name="price"
@@ -381,7 +425,7 @@ export default function AddServiceForm() {
                 <div className="grid grid-cols-3 gap-3 pt-1 sm:grid-cols-4">
                   {images.map((entry, index) => (
                     <div
-                      key={entry.preview}
+                      key={`${entry.preview}-${index}`}
                       className="group relative aspect-square overflow-hidden rounded-lg border border-border bg-(--surface-muted)"
                     >
                       <Image
@@ -408,32 +452,31 @@ export default function AddServiceForm() {
             </Field>
           </FieldGroup>
 
-          <div
-            className={cn(
-              "flex items-start gap-2 rounded-lg border border-(--brand)/20",
-              "bg-(--brand-soft)/50 px-3 py-2.5 text-xs text-(--text-secondary)"
-            )}
-          >
-            <Sparkles size={15} className="mt-0.5 shrink-0 text-(--brand)" />
-            <p>
-              New services start with <strong className="text-(--text-primary)">Pending</strong>{" "}
-              status and go live after an admin approves them. You can follow the
-              approval status in My Services.
-            </p>
-          </div>
+          {!isEdit && (
+            <div
+              className={cn(
+                "flex items-start gap-2 rounded-lg border border-(--brand)/20",
+                "bg-(--brand-soft)/50 px-3 py-2.5 text-xs text-(--text-secondary)"
+              )}
+            >
+              <Sparkles size={15} className="mt-0.5 shrink-0 text-(--brand)" />
+              <p>
+                New services start with <strong className="text-(--text-primary)">Pending</strong>{" "}
+                status and go live after an admin approves them. You can follow the
+                approval status in My Services.
+              </p>
+            </div>
+          )}
 
           <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             <Button
               type="button"
               variant="outline"
               disabled={submitting}
-              onClick={() => {
-                resetForm();
-                setErrors({});
-              }}
+              onClick={resetForm}
               className="rounded-full sm:min-w-28"
             >
-              Clear
+              {isEdit ? "Reset" : "Clear"}
             </Button>
             <Button
               type="submit"
@@ -442,8 +485,10 @@ export default function AddServiceForm() {
             >
               {submitting ? (
                 <>
-                  <Loader2 className="animate-spin" /> Submitting...
+                  <Loader2 className="animate-spin" /> Saving...
                 </>
+              ) : isEdit ? (
+                "Save Changes"
               ) : (
                 "Submit Service"
               )}

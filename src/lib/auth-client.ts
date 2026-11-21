@@ -3,7 +3,8 @@ import { inferAdditionalFields, jwtClient } from "better-auth/client/plugins";
 import type { auth } from "@/lib/auth";
 
 export const authClient = createAuthClient({
-  baseURL: process.env.BETTER_AUTH_URL,
+  // No baseURL here: BETTER_AUTH_URL is server-only and is replaced with
+  // undefined in the browser. better-auth correctly infers the page origin.
   plugins: [
     inferAdditionalFields<typeof auth>(),
     jwtClient(),

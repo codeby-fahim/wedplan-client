@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 type SignInPageProps = {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; callbackUrl?: string }>;
 };
 
 const highlights = [
@@ -35,7 +35,7 @@ const highlights = [
 ];
 
 const SignInPage = async ({ searchParams }: SignInPageProps) => {
-  const { error } = await searchParams;
+  const { error, callbackUrl } = await searchParams;
 
   return (
     <main className="relative flex min-h-[calc(100vh-4rem)] items-center justify-center overflow-hidden px-4 py-10 sm:px-6 lg:py-14">
@@ -83,7 +83,7 @@ const SignInPage = async ({ searchParams }: SignInPageProps) => {
         </section>
 
         <div className="w-full">
-          <SignInForm oauthError={error} />
+          <SignInForm oauthError={error} callbackUrl={callbackUrl} />
         </div>
       </div>
     </main>
