@@ -134,8 +134,23 @@ export async function updateServiceStatus(
   return result.service;
 }
 
-export async function getPublicServices(): Promise<ServiceRecord[]> {
-  const response = await fetch(`${BASE_URL}/services`, {
+export type ServiceFilters = {
+  search?: string;
+  category?: string;
+  location?: string;
+};
+
+export async function getPublicServices(
+  filters: ServiceFilters = {}
+): Promise<ServiceRecord[]> {
+  const params = new URLSearchParams();
+
+  if (filters.search?.trim()) params.set("search", filters.search.trim());
+  if (filters.category?.trim()) params.set("category", filters.category.trim());
+  if (filters.location?.trim()) params.set("location", filters.location.trim());
+
+  const query = params.toString();
+  const response = await fetch(`${BASE_URL}/services${query ? `?${query}` : ""}`, {
     cache: "no-store",
   });
 

@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   AlertCircle,
   ArrowRight,
+  Loader2,
   MapPin,
   RefreshCw,
   Search,
@@ -14,6 +15,7 @@ import {
   Store,
 } from "lucide-react";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -22,10 +24,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Field,
-  FieldLabel,
-} from "@/components/ui/field";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -34,7 +33,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getPublicServices, type ServiceRecord } from "@/lib/api/service-api";
+import {
+  getPublicServices,
+  type ServiceFilters,
+  type ServiceRecord,
+} from "@/lib/api/service-api";
 import { authClient } from "@/lib/auth-client";
 import { SERVICE_CATEGORIES } from "@/lib/service-categories";
 
@@ -44,58 +47,67 @@ export default function PublicServicesGrid() {
 
   const [services, setServices] = useState<ServiceRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loadedOnce, setLoadedOnce] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [requestId, setRequestId] = useState(0);
 
-  const [query, setQuery] = useState("");
+  const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
   const [location, setLocation] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [debouncedLocation, setDebouncedLocation] = useState("");
 
-  const load = useCallback(async (active: boolean) => {
-    setLoading(true);
+  // Debounce text inputs so we don't hit the API on every keystroke.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search.trim());
+      setDebouncedLocation(location.trim());
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [search, location]);
+
+  const load = useCallback(async (active: boolean, filters: ServiceFilters) => {
     setError(null);
+    setRefreshing(true);
 
     try {
-      const data = await getPublicServices();
+      const data = await getPublicServices(filters);
       if (active) setServices(data);
     } catch (err) {
       if (active) {
         setError(err instanceof Error ? err.message : "Could not load services.");
       }
     } finally {
-      if (active) setLoading(false);
+      if (active) {
+        setLoading(false);
+        setRefreshing(false);
+        setLoadedOnce(true);
+      }
     }
   }, []);
 
+  // All filtering runs on the backend via query parameters.
   useEffect(() => {
     let active = true;
     queueMicrotask(() => {
-      void load(active);
+      void load(active, {
+        search: debouncedSearch,
+        category,
+        location: debouncedLocation,
+      });
     });
 
     return () => {
       active = false;
     };
-  }, [load, requestId]);
+  }, [load, debouncedSearch, category, debouncedLocation, requestId]);
 
-  const filtered = useMemo(() => {
-    const nameTerm = query.trim().toLowerCase();
-    const locationTerm = location.trim().toLowerCase();
-
-    return services.filter((service) => {
-      if (nameTerm && !service.serviceName.toLowerCase().includes(nameTerm))
-        return false;
-      if (category && service.category !== category) return false;
-      if (locationTerm && !service.location.toLowerCase().includes(locationTerm))
-        return false;
-      return true;
-    });
-  }, [services, query, category, location]);
-
-  const hasFilters = Boolean(query.trim() || category || location.trim());
+  const hasFilters = Boolean(search.trim() || category || location.trim());
 
   const clearFilters = () => {
-    setQuery("");
+    setSearch("");
     setCategory("");
     setLocation("");
   };
@@ -110,22 +122,6 @@ export default function PublicServicesGrid() {
 
     router.push(`/services/${id}`);
   };
-
-  if (loading) {
-    return (
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, index) => (
-          <Card key={index} className="theme-card animate-pulse overflow-hidden">
-            <div className="aspect-video bg-(--surface-muted)" />
-            <CardContent className="space-y-3 pt-4">
-              <div className="h-4 w-3/4 rounded bg-(--surface-muted)" />
-              <div className="h-3 w-1/2 rounded bg-(--surface-muted)" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
-  }
 
   if (error) {
     return (
@@ -151,6 +147,22 @@ export default function PublicServicesGrid() {
     );
   }
 
+  if (loading && !loadedOnce) {
+    return (
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <Card key={index} className="theme-card animate-pulse overflow-hidden">
+            <div className="aspect-video bg-(--surface-muted)" />
+            <CardContent className="space-y-3 pt-4">
+              <div className="h-4 w-3/4 rounded bg-(--surface-muted)" />
+              <div className="h-3 w-1/2 rounded bg-(--surface-muted)" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <Card className="theme-card p-4 sm:p-5">
@@ -173,8 +185,8 @@ export default function PublicServicesGrid() {
                 id="service-search"
                 className="pl-9"
                 placeholder="e.g. Photography"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
               />
             </div>
           </Field>
@@ -214,8 +226,11 @@ export default function PublicServicesGrid() {
         </div>
 
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-          <p className="muted-text text-xs">
-            Showing {filtered.length} of {services.length} services
+          <p className="muted-text flex items-center gap-2 text-xs">
+            {refreshing && <Loader2 size={13} className="animate-spin text-(--brand)" />}
+            {refreshing
+              ? "Searching services..."
+              : `${services.length} service${services.length === 1 ? "" : "s"} found`}
           </p>
           {hasFilters && (
             <Button
@@ -231,7 +246,7 @@ export default function PublicServicesGrid() {
         </div>
       </Card>
 
-      {services.length === 0 && (
+      {services.length === 0 && !hasFilters && (
         <Card className="theme-card flex flex-col items-center px-6 py-14 text-center">
           <span className="flex size-14 items-center justify-center rounded-full bg-(--brand-soft) text-(--brand)">
             <SearchX size={26} />
@@ -246,7 +261,7 @@ export default function PublicServicesGrid() {
         </Card>
       )}
 
-      {services.length > 0 && filtered.length === 0 && (
+      {services.length === 0 && hasFilters && !refreshing && (
         <Card className="theme-card flex flex-col items-center px-6 py-14 text-center">
           <span className="flex size-14 items-center justify-center rounded-full bg-(--brand-soft) text-(--brand)">
             <SearchX size={26} />
@@ -268,9 +283,9 @@ export default function PublicServicesGrid() {
         </Card>
       )}
 
-      {filtered.length > 0 && (
+      {services.length > 0 && (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((service) => {
+          {services.map((service) => {
             const vendor = service.vendor;
             const vendorName = vendor?.businessName || vendor?.name || "WedPlan Vendor";
 
@@ -289,9 +304,16 @@ export default function PublicServicesGrid() {
                   ) : null}
                 </div>
                 <CardHeader>
-                  <CardTitle className="font-heading text-lg text-(--text-primary)">
-                    {service.serviceName}
-                  </CardTitle>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <CardTitle className="font-heading text-lg text-(--text-primary)">
+                      {service.serviceName}
+                    </CardTitle>
+                    {service.status === "pending" && (
+                      <Badge className="bg-[hsl(var(--warning))] text-[hsl(var(--warning-foreground))]">
+                        Pending approval
+                      </Badge>
+                    )}
+                  </div>
                   <CardDescription>{service.category}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
