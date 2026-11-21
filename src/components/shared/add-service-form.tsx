@@ -271,11 +271,15 @@ export default function AddServiceForm({
         router.refresh();
       }
     } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Please try again in a moment.";
+
+      if (/upload|image/i.test(message)) {
+        setErrors((current) => ({ ...current, images: message }));
+      }
+
       toast.error(isEdit ? "Could not update service" : "Submission failed", {
-        description:
-          error instanceof Error
-            ? error.message
-            : "Please try again in a moment.",
+        description: message,
       });
     } finally {
       setSubmitting(false);

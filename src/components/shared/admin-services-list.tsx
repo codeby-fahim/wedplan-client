@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import {
   AlertCircle,
   Check,
+  Loader2,
   MapPin,
   RefreshCw,
   Search,
@@ -323,7 +324,8 @@ export default function AdminServicesList() {
                           onClick={() => void changeStatus(service, "approved")}
                           className="rounded-full"
                         >
-                          <Check /> Approve
+                          {isBusy ? <Loader2 className="animate-spin" /> : <Check />}
+                          {isBusy ? "Processing..." : "Approve"}
                         </Button>
                       )}
                       {service.status !== "rejected" && (
@@ -334,7 +336,8 @@ export default function AdminServicesList() {
                           onClick={() => void changeStatus(service, "rejected")}
                           className="rounded-full"
                         >
-                          <X /> Reject
+                          {isBusy ? <Loader2 className="animate-spin" /> : <X />}
+                          {isBusy ? "Processing..." : "Reject"}
                         </Button>
                       )}
                       <Button
@@ -344,7 +347,8 @@ export default function AdminServicesList() {
                         onClick={() => setPendingDelete(service)}
                         className="rounded-full text-destructive hover:text-destructive"
                       >
-                        <Trash2 /> Delete
+                        {isBusy ? <Loader2 className="animate-spin" /> : <Trash2 />}
+                        {isBusy ? "Deleting..." : "Delete"}
                       </Button>
                     </div>
                   </div>

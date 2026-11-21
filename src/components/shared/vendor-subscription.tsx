@@ -159,7 +159,12 @@ export default function VendorSubscription() {
             onClick={() => setConfirmOpen(true)}
             className="rounded-full"
           >
-            <Sparkles /> Upgrade to Premium
+            {upgrading ? (
+              <Loader2 className="animate-spin" />
+            ) : (
+              <Sparkles />
+            )}
+            {upgrading ? "Redirecting to checkout..." : "Upgrade to Premium"}
           </Button>
         )}
       </Card>
@@ -251,7 +256,12 @@ export default function VendorSubscription() {
                 onClick={() => setConfirmOpen(true)}
                 className="mt-auto w-full rounded-full"
               >
-                <Sparkles /> Upgrade to Premium
+                {upgrading ? (
+                  <Loader2 className="animate-spin" />
+                ) : (
+                  <Sparkles />
+                )}
+                {upgrading ? "Redirecting to checkout..." : "Upgrade to Premium"}
               </Button>
             )}
           </CardContent>

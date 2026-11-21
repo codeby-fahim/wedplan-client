@@ -1,4 +1,5 @@
 import { getTokenFromClient } from "@/lib/getTokenFromClient";
+import { missingToken } from "@/lib/api/api-error";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
@@ -53,6 +54,7 @@ async function getAuthHeader(): Promise<HeadersInit> {
   const token = await getTokenFromClient();
 
   if (!token) {
+    missingToken();
     throw new ServiceApiError("Your session has expired. Please sign in again.");
   }
 

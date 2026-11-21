@@ -12,6 +12,7 @@ import {
   ChevronUp,
   Clock3,
   Inbox,
+  Loader2,
   MapPin,
   RefreshCw,
   Store,
@@ -273,7 +274,13 @@ export default function CustomerBookingsList() {
                         onClick={() => setPendingCancel(booking)}
                         className="rounded-full text-destructive hover:text-destructive"
                       >
-                        Cancel Request
+                        {busyId === booking.id ? (
+                          <>
+                            <Loader2 className="animate-spin" /> Cancelling...
+                          </>
+                        ) : (
+                          "Cancel Request"
+                        )}
                       </Button>
                     )}
 

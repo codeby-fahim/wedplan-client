@@ -6,6 +6,7 @@ import {
   CalendarDays,
   Check,
   Inbox,
+  Loader2,
   Mail,
   MapPin,
   RefreshCw,
@@ -231,7 +232,8 @@ export default function VendorBookingsList() {
                     onClick={() => void process(booking, "accepted")}
                     className="rounded-full"
                   >
-                    <Check /> Accept
+                    {isBusy ? <Loader2 className="animate-spin" /> : <Check />}
+                    {isBusy ? "Processing..." : "Accept"}
                   </Button>
                   <Button
                     size="sm"
@@ -240,7 +242,8 @@ export default function VendorBookingsList() {
                     onClick={() => void process(booking, "rejected")}
                     className="rounded-full"
                   >
-                    <X /> Reject
+                    {isBusy ? <Loader2 className="animate-spin" /> : <X />}
+                    {isBusy ? "Processing..." : "Reject"}
                   </Button>
                 </div>
               ) : (

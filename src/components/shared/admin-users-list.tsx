@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronUp,
+  Loader2,
   RefreshCw,
   Search,
   ShieldCheck,
@@ -283,7 +284,13 @@ export default function AdminUsersList() {
                         onClick={() => setTarget(user)}
                         className="rounded-full"
                       >
-                        {user.isBlocked ? "Unblock" : "Block"}
+                        {busyId === user.id ? (
+                          <Loader2 className="animate-spin" />
+                        ) : user.isBlocked ? (
+                          "Unblock"
+                        ) : (
+                          "Block"
+                        )}
                       </Button>
                     )}
                   </div>
