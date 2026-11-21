@@ -40,6 +40,17 @@ function assertValidPassword(value: unknown): void {
 export const auth = betterAuth({
   // Be explicit on Vercel — never rely on framework origin inference.
   baseURL: process.env.BETTER_AUTH_URL,
+
+  // better-auth validates the request Origin header (CSRF protection). On
+  // Vercel the preview/production hostname is provided in VERCEL_URL, which
+  // may differ from BETTER_AUTH_URL. Trust every known client origin.
+  trustedOrigins: [
+    process.env.BETTER_AUTH_URL,
+    process.env.NEXT_PUBLIC_SITE_URL,
+    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined,
+    "http://localhost:3000",
+  ].filter((value): value is string => Boolean(value)),
+
   database: mongodbAdapter(db, { client }),
 
   emailAndPassword: {
