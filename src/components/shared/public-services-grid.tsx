@@ -350,8 +350,15 @@ export default function PublicServicesGrid() {
                       <span className="muted-text block text-[10px] uppercase tracking-wide">
                         Vendor
                       </span>
-                      <span className="block truncate text-xs font-medium text-(--text-primary)">
-                        {vendorName}
+                      <span className="flex items-center gap-1.5">
+                        <span className="block truncate text-xs font-medium text-(--text-primary)">
+                          {vendorName}
+                        </span>
+                        {vendor?.subscriptionPlan === "premium" && (
+                          <Badge className="bg-[hsl(var(--success))] px-1.5 py-0 text-[10px] text-[hsl(var(--success-foreground))]">
+                            Premium
+                          </Badge>
+                        )}
                       </span>
                     </span>
                   </div>

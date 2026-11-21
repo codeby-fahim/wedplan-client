@@ -7,6 +7,7 @@ import { useParams, useRouter } from "next/navigation";
 import { AlertCircle, ArrowLeft, MapPin, RefreshCw, Store } from "lucide-react";
 
 import BookingForm from "@/components/shared/booking-form";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   getPublicServiceById,
@@ -167,10 +168,17 @@ export default function ServiceDetail() {
                   <span className="muted-text block text-[10px] uppercase tracking-wide">
                     Provided by
                   </span>
-                  <span className="block truncate text-sm font-medium text-(--text-primary)">
-                    {service.vendor?.businessName ||
-                      service.vendor?.name ||
-                      "WedPlan Vendor"}
+                  <span className="flex items-center gap-2">
+                    <span className="block truncate text-sm font-medium text-(--text-primary)">
+                      {service.vendor?.businessName ||
+                        service.vendor?.name ||
+                        "WedPlan Vendor"}
+                    </span>
+                    {service.vendor?.subscriptionPlan === "premium" && (
+                      <Badge className="bg-[hsl(var(--success))] px-1.5 py-0 text-[10px] text-[hsl(var(--success-foreground))]">
+                        Premium
+                      </Badge>
+                    )}
                   </span>
                 </span>
               </div>

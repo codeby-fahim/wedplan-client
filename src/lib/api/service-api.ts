@@ -17,6 +17,7 @@ export type ServiceVendor = {
   name: string | null;
   businessName: string | null;
   image: string | null;
+  subscriptionPlan: "free" | "premium";
 };
 
 export type ServiceRecord = ServicePayload & {
