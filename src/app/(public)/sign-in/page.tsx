@@ -3,6 +3,9 @@ import { CalendarCheck, HeartHandshake, Sparkles, Store } from "lucide-react";
 
 import SignInForm from "@/components/shared/sign-in-form";
 
+// Reads searchParams on the server; allow this route to block at prerender time.
+export const instant = false;
+
 export const metadata: Metadata = {
   title: "Sign In",
   description:

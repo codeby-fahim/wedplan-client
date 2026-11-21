@@ -3,6 +3,9 @@ import { CalendarCheck, HeartHandshake, ShieldCheck, Sparkles } from "lucide-rea
 
 import SignUpForm from "@/components/shared/sign-up-form";
 
+// Reads searchParams on the server; allow this route to block at prerender time.
+export const instant = false;
+
 export const metadata: Metadata = {
   title: "Sign Up",
   description:
