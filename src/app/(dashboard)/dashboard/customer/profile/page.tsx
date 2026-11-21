@@ -1,3 +1,4 @@
+import CustomerProfileForm from "@/components/shared/customer-profile-form";
 import DashboardPage from "@/components/shared/dashboard-page";
 
 export const metadata = { title: "Customer Profile Settings" };
@@ -7,6 +8,8 @@ export default function CustomerProfilePage() {
     <DashboardPage
       title="Profile Settings"
       description="Manage your personal details and wedding preferences."
-    />
+    >
+      <CustomerProfileForm />
+    </DashboardPage>
   );
 }

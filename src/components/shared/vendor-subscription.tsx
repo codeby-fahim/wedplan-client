@@ -214,6 +214,12 @@ export default function VendorSubscription() {
             <p className="muted-text mt-1 text-sm">
               Everything you need to get started as a wedding vendor.
             </p>
+            <div className="mt-4 flex items-baseline gap-1">
+              <span className="font-heading text-3xl font-semibold text-(--text-primary)">
+                $0
+              </span>
+              <span className="muted-text text-sm">/ forever</span>
+            </div>
           </CardHeader>
           <CardContent className="flex flex-1 flex-col">
             <ul className="space-y-3">
@@ -252,6 +258,12 @@ export default function VendorSubscription() {
             <p className="muted-text mt-1 text-sm">
               For vendors ready to grow without limits.
             </p>
+            <div className="mt-4 flex items-baseline gap-1">
+              <span className="font-heading text-3xl font-semibold text-(--text-primary)">
+                $100
+              </span>
+              <span className="muted-text text-sm">/ month</span>
+            </div>
           </CardHeader>
           <CardContent className="flex flex-1 flex-col">
             <ul className="space-y-3">

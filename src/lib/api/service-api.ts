@@ -86,8 +86,17 @@ export async function addService(payload: ServicePayload): Promise<ServiceRecord
   return result.service;
 }
 
-export async function getAdminServices(): Promise<ServiceRecord[]> {
-  const response = await fetch(`${BASE_URL}/admin/services`, {
+export async function getAdminServices(
+  filters: { search?: string; category?: string; status?: string } = {}
+): Promise<ServiceRecord[]> {
+  const params = new URLSearchParams();
+
+  if (filters.search?.trim()) params.set("search", filters.search.trim());
+  if (filters.category?.trim()) params.set("category", filters.category.trim());
+  if (filters.status?.trim()) params.set("status", filters.status.trim());
+
+  const query = params.toString();
+  const response = await fetch(`${BASE_URL}/admin/services${query ? `?${query}` : ""}`, {
     headers: await getAuthHeader(),
     cache: "no-store",
   });

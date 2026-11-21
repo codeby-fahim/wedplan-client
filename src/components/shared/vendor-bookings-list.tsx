@@ -39,6 +39,10 @@ const STATUS_STYLE: Record<
     label: "Rejected",
     className: "bg-destructive text-destructive-foreground",
   },
+  cancelled: {
+    label: "Cancelled",
+    className: "bg-secondary text-secondary-foreground",
+  },
 };
 
 function formatDate(value: string) {

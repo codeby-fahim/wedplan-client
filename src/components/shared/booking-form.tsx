@@ -149,6 +149,17 @@ export default function BookingForm({ service }: { service: ServiceRecord }) {
         Tell the vendor about your event. They&apos;ll reply after reviewing.
       </p>
 
+      <div className="mt-4 grid gap-2 rounded-lg bg-(--surface-muted) px-3 py-2.5 text-xs sm:grid-cols-2">
+        <p className="text-(--text-primary)">
+          <span className="muted-text block">Booking as</span>
+          {session?.user.name ?? "Customer"} · {session?.user.email}
+        </p>
+        <p className="text-(--text-primary)">
+          <span className="muted-text block">Selected vendor</span>
+          {service.vendor?.businessName || service.vendor?.name || "WedPlan Vendor"}
+        </p>
+      </div>
+
       {created && (
         <div className="mt-4 rounded-lg border border-(--brand)/30 bg-(--brand-soft) px-3 py-2.5 text-sm text-(--text-primary)">
           Your request is <strong>pending</strong>. You can track it in{" "}
@@ -206,7 +217,7 @@ export default function BookingForm({ service }: { service: ServiceRecord }) {
           </Field>
 
           <Field data-invalid={Boolean(errors.message)}>
-            <FieldLabel htmlFor="message">Message for the vendor *</FieldLabel>
+            <FieldLabel htmlFor="message">Additional Message *</FieldLabel>
             <Textarea
               id="message"
               rows={4}
