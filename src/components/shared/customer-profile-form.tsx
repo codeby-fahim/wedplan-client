@@ -56,9 +56,8 @@ export default function CustomerProfileForm() {
   }, [session, initialized]);
 
   useEffect(() => {
-    const url = objectUrlRef.current;
     return () => {
-      if (url) URL.revokeObjectURL(url);
+      if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
     };
   }, []);
 

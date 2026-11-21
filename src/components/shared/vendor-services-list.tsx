@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -89,6 +89,7 @@ function formatDate(value: string) {
 }
 
 export default function VendorServicesList() {
+  const servicesRef = useRef<ServiceRecord[]>([]);
   const [services, setServices] = useState<ServiceRecord[]>([]);
   const [stats, setStats] = useState<VendorStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -107,6 +108,7 @@ export default function VendorServicesList() {
         getVendorStats(),
       ]);
       if (active) {
+        servicesRef.current = serviceData;
         setServices(serviceData);
         setStats(statsData);
       }
@@ -139,9 +141,10 @@ export default function VendorServicesList() {
 
     try {
       const updated = await setServiceAvailability(service.id, !service.isActive);
-      const nextServices = services.map((item) =>
+      const nextServices = servicesRef.current.map((item) =>
         item.id === updated.id ? updated : item
       );
+      servicesRef.current = nextServices;
       setServices(nextServices);
       setStats((current) =>
         current

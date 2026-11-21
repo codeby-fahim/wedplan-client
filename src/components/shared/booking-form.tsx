@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -32,6 +32,7 @@ export default function BookingForm({ service }: { service: ServiceRecord }) {
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitting, setSubmitting] = useState(false);
   const [created, setCreated] = useState<BookingRecord | null>(null);
+  const submittingRef = useRef(false);
 
   const setValue = (key: keyof FormErrors, value: string) => {
     if (key === "eventDate") setEventDate(value);
@@ -58,6 +59,8 @@ export default function BookingForm({ service }: { service: ServiceRecord }) {
       return;
     }
 
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setSubmitting(true);
 
     try {
@@ -80,6 +83,7 @@ export default function BookingForm({ service }: { service: ServiceRecord }) {
         description: err instanceof Error ? err.message : "Please try again.",
       });
     } finally {
+      submittingRef.current = false;
       setSubmitting(false);
     }
   };
@@ -150,7 +154,7 @@ export default function BookingForm({ service }: { service: ServiceRecord }) {
       </p>
 
       <div className="mt-4 grid gap-2 rounded-lg bg-(--surface-muted) px-3 py-2.5 text-xs sm:grid-cols-2">
-        <p className="text-(--text-primary)">
+        <p className="min-w-0 break-words text-(--text-primary)">
           <span className="muted-text block">Booking as</span>
           {session?.user.name ?? "Customer"} · {session?.user.email}
         </p>

@@ -1,6 +1,6 @@
 import { getTokenFromClient } from "@/lib/getTokenFromClient";
 import { ServiceApiError } from "@/lib/api/service-api";
-import { missingToken } from "@/lib/api/api-error";
+import { guardResponse, missingToken } from "@/lib/api/api-error";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
@@ -59,6 +59,7 @@ export async function getAdminStats(): Promise<AdminStats> {
     stats?: AdminStats;
   } | null;
 
+  guardResponse(response.status, result?.message);
   if (!response.ok || !result?.success || !result.stats) {
     throw new ServiceApiError(result?.message ?? "Could not load admin dashboard.");
   }
@@ -84,6 +85,7 @@ export async function getAdminUsers(filters: {
     users?: AdminUser[];
   } | null;
 
+  guardResponse(response.status, result?.message);
   if (!response.ok || !result?.success || !result.users) {
     throw new ServiceApiError(result?.message ?? "Could not load users.");
   }
@@ -108,6 +110,7 @@ export async function setUserBlocked(
     user?: AdminUser;
   } | null;
 
+  guardResponse(response.status, result?.message);
   if (!response.ok || !result?.success || !result.user) {
     throw new ServiceApiError(result?.message ?? "Could not update the user.");
   }
@@ -124,6 +127,7 @@ export async function deleteService(id: string): Promise<void> {
     message?: string;
   } | null;
 
+  guardResponse(response.status, result?.message);
   if (!response.ok || !result?.success) {
     throw new ServiceApiError(result?.message ?? "Could not delete the service.");
   }
@@ -140,6 +144,7 @@ export async function getAdminTransactions(): Promise<AdminTransaction[]> {
     transactions?: AdminTransaction[];
   } | null;
 
+  guardResponse(response.status, result?.message);
   if (!response.ok || !result?.success || !result.transactions) {
     throw new ServiceApiError(result?.message ?? "Could not load transactions.");
   }

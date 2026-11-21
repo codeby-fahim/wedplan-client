@@ -125,6 +125,7 @@ export default function AddServiceForm({
   const isEdit = Boolean(initialService);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const objectUrlsRef = useRef<string[]>([]);
+  const submittingRef = useRef(false);
 
   const [values, setValues] = useState<FormValues>(() =>
     valuesFromService(initialService)
@@ -136,9 +137,8 @@ export default function AddServiceForm({
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    const createdUrls = objectUrlsRef.current;
     return () => {
-      createdUrls.forEach((url) => URL.revokeObjectURL(url));
+      objectUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
     };
   }, []);
 
@@ -214,6 +214,8 @@ export default function AddServiceForm({
       return;
     }
 
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setSubmitting(true);
 
     try {
@@ -282,6 +284,7 @@ export default function AddServiceForm({
         description: message,
       });
     } finally {
+      submittingRef.current = false;
       setSubmitting(false);
     }
   };
@@ -426,7 +429,7 @@ export default function AddServiceForm({
               </button>
 
               {images.length > 0 && (
-                <div className="grid grid-cols-3 gap-3 pt-1 sm:grid-cols-4">
+                <div className="grid grid-cols-2 gap-3 pt-1 min-[360px]:grid-cols-3 sm:grid-cols-4">
                   {images.map((entry, index) => (
                     <div
                       key={`${entry.preview}-${index}`}

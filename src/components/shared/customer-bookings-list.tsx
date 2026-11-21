@@ -302,7 +302,9 @@ export default function CustomerBookingsList() {
                     <p className="muted-text text-[11px] font-medium uppercase tracking-wide">
                       Your message
                     </p>
-                    <p className="mt-1 text-sm text-(--text-primary)">{booking.message}</p>
+                    <p className="mt-1 break-words text-sm text-(--text-primary)">
+                  {booking.message}
+                </p>
                   </div>
                   <div className="grid gap-3 text-xs sm:grid-cols-2">
                     <p className="text-(--text-primary)">

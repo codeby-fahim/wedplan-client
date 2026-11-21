@@ -67,6 +67,7 @@ export default function AdminUsersList() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [target, setTarget] = useState<AdminUser | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [requestId, setRequestId] = useState(0);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search.trim()), 300);
@@ -103,7 +104,7 @@ export default function AdminUsersList() {
     return () => {
       active = false;
     };
-  }, [load, debouncedSearch, role]);
+  }, [load, debouncedSearch, role, requestId]);
 
   const confirmToggle = async () => {
     if (!target) return;
@@ -148,10 +149,11 @@ export default function AdminUsersList() {
             setSearch("");
             setDebouncedSearch("");
             setRole("");
+            setRequestId((current) => current + 1);
           }}
           className="rounded-full"
         >
-          <RefreshCw /> Reset
+          <RefreshCw /> Retry
         </Button>
       </Card>
     );
@@ -300,7 +302,7 @@ export default function AdminUsersList() {
                   <div className="grid gap-3 border-t border-border bg-(--surface-muted)/40 px-4 py-4 text-xs sm:grid-cols-2 sm:px-5">
                     <p className="text-(--text-primary)">
                       <span className="muted-text block">User ID</span>
-                      {user.id}
+                      <span className="block break-all">{user.id}</span>
                     </p>
                     <p className="text-(--text-primary)">
                       <span className="muted-text block">Business name</span>

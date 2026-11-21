@@ -121,7 +121,7 @@ export default function PaymentSuccess() {
               <span className="muted-text">Amount</span>
               <span className="font-medium text-(--text-primary)">
                 {new Intl.NumberFormat("en-US").format(status.transaction.amount)}{" "}
-                {status.transaction.currency.toUpperCase()}
+                {(status.transaction.currency ?? "bdt").toUpperCase()}
               </span>
             </div>
             <div className="mt-2 flex flex-wrap items-center justify-between gap-2">

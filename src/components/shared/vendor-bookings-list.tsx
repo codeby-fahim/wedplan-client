@@ -202,8 +202,8 @@ export default function VendorBookingsList() {
                     <UserRound size={15} className="text-(--brand)" />
                     {booking.customerName}
                   </p>
-                  <p className="muted-text flex items-center gap-2 text-xs">
-                    <Mail size={14} /> {booking.customerEmail}
+                  <p className="muted-text flex min-w-0 items-center gap-2 break-all text-xs">
+                    <Mail size={14} className="shrink-0" /> {booking.customerEmail}
                   </p>
                 </div>
                 <div className="space-y-1.5">
@@ -221,7 +221,9 @@ export default function VendorBookingsList() {
                 <p className="muted-text text-[11px] font-medium uppercase tracking-wide">
                   Customer message
                 </p>
-                <p className="mt-1 text-sm text-(--text-primary)">{booking.message}</p>
+                <p className="mt-1 break-words text-sm text-(--text-primary)">
+                  {booking.message}
+                </p>
               </div>
 
               {isPending ? (

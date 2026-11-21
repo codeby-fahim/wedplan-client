@@ -75,6 +75,7 @@ export default function AdminServicesList() {
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<ServiceRecord | null>(null);
+  const [requestId, setRequestId] = useState(0);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search.trim()), 300);
@@ -118,7 +119,7 @@ export default function AdminServicesList() {
     return () => {
       active = false;
     };
-  }, [load, debouncedSearch, category, status]);
+  }, [load, debouncedSearch, category, status, requestId]);
 
   const changeStatus = async (service: ServiceRecord, next: ServiceStatus) => {
     setBusyId(service.id);
@@ -180,10 +181,11 @@ export default function AdminServicesList() {
             setDebouncedSearch("");
             setCategory("");
             setStatus("");
+            setRequestId((current) => current + 1);
           }}
           className="rounded-full"
         >
-          <RefreshCw /> Reset
+          <RefreshCw /> Retry
         </Button>
       </Card>
     );
@@ -313,7 +315,7 @@ export default function AdminServicesList() {
                       <span className="flex items-center gap-1">
                         <MapPin size={13} /> {service.location}
                       </span>
-                      <span>Vendor: {service.vendorId}</span>
+                      <span className="break-all">Vendor: {service.vendorId}</span>
                     </div>
 
                     <div className="flex flex-wrap gap-2 pt-1">

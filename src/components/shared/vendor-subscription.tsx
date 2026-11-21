@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   AlertCircle,
@@ -46,6 +46,7 @@ export default function VendorSubscription() {
   const [requestId, setRequestId] = useState(0);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [upgrading, setUpgrading] = useState(false);
+  const upgradingRef = useRef(false);
 
   const load = useCallback(async (active: boolean) => {
     setError(null);
@@ -72,6 +73,8 @@ export default function VendorSubscription() {
   }, [load, requestId]);
 
   const handleUpgrade = async () => {
+    if (upgradingRef.current) return;
+    upgradingRef.current = true;
     setUpgrading(true);
 
     try {
@@ -81,6 +84,7 @@ export default function VendorSubscription() {
       toast.error("Could not start checkout", {
         description: err instanceof Error ? err.message : "Please try again.",
       });
+      upgradingRef.current = false;
       setUpgrading(false);
     }
   };

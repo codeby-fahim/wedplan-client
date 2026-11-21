@@ -1,6 +1,6 @@
 import { getTokenFromClient } from "@/lib/getTokenFromClient";
 import { ServiceApiError } from "@/lib/api/service-api";
-import { missingToken } from "@/lib/api/api-error";
+import { guardResponse, missingToken } from "@/lib/api/api-error";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
@@ -38,6 +38,7 @@ export async function createCheckoutSession(): Promise<string> {
     url?: string;
   } | null;
 
+  guardResponse(response.status, result?.message);
   if (!response.ok || !result?.success || !result.url) {
     throw new ServiceApiError(
       result?.message ?? "Could not start checkout. Please try again."
@@ -66,6 +67,7 @@ export async function getSubscriptionStatus(
     transaction?: SubscriptionStatus["transaction"];
   } | null;
 
+  guardResponse(response.status, result?.message);
   if (!response.ok || !result?.success) {
     throw new ServiceApiError(
       result?.message ?? "Could not load your payment status. Please try again."

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import {
   AlertCircle,
   Check,
@@ -244,6 +245,16 @@ export default function SignUpForm({
 
   const handleGoogleSignIn = async () => {
     setNotice(null);
+
+    if (values.role === "vendor" && !values.businessName.trim()) {
+      setErrors((current) => ({
+        ...current,
+        businessName: "Business name is required for vendor accounts.",
+      }));
+      toast.error("Business name is required for vendor accounts.");
+      return;
+    }
+
     setSubmitting("google");
 
     try {
@@ -253,7 +264,11 @@ export default function SignUpForm({
         callbackURL: destination,
         newUserCallbackURL: destination,
         errorCallbackURL: "/sign-up?error=google",
-        additionalData: { role: values.role },
+        additionalData: {
+          role: values.role,
+          businessName:
+            values.role === "vendor" ? values.businessName.trim() : undefined,
+        },
       });
 
       if (result.error) {

@@ -1,6 +1,6 @@
 import { getTokenFromClient } from "@/lib/getTokenFromClient";
 import { ServiceApiError } from "@/lib/api/service-api";
-import { missingToken } from "@/lib/api/api-error";
+import { guardResponse, missingToken } from "@/lib/api/api-error";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
@@ -64,6 +64,7 @@ export async function getVendorBookings(): Promise<BookingRecord[]> {
     bookings?: BookingRecord[];
   } | null;
 
+  guardResponse(response.status, result?.message);
   if (!response.ok || !result?.success || !result.bookings) {
     throw new ServiceApiError(
       result?.message ?? "Could not load booking requests. Please try again."
@@ -92,6 +93,7 @@ export async function updateBookingStatus(
     booking?: BookingRecord;
   } | null;
 
+  guardResponse(response.status, result?.message);
   if (!response.ok || !result?.success || !result.booking) {
     throw new ServiceApiError(
       result?.message ?? "Could not update the request. Please try again."
@@ -118,6 +120,7 @@ export async function createBooking(payload: BookingPayload): Promise<BookingRec
     booking?: BookingRecord;
   } | null;
 
+  guardResponse(response.status, result?.message);
   if (!response.ok || !result?.success || !result.booking) {
     throw new ServiceApiError(
       result?.message ?? "Could not send your request. Please try again.",
@@ -140,6 +143,7 @@ export async function getCustomerStats(): Promise<CustomerStats> {
     stats?: CustomerStats;
   } | null;
 
+  guardResponse(response.status, result?.message);
   if (!response.ok || !result?.success || !result.stats) {
     throw new ServiceApiError(
       result?.message ?? "Could not load your dashboard. Please try again."
@@ -160,6 +164,7 @@ export async function cancelBooking(id: string): Promise<void> {
     message?: string;
   } | null;
 
+  guardResponse(response.status, result?.message);
   if (!response.ok || !result?.success) {
     throw new ServiceApiError(
       result?.message ?? "Could not cancel your request. Please try again."
@@ -179,6 +184,7 @@ export async function getCustomerBookings(): Promise<BookingRecord[]> {
     bookings?: BookingRecord[];
   } | null;
 
+  guardResponse(response.status, result?.message);
   if (!response.ok || !result?.success || !result.bookings) {
     throw new ServiceApiError(
       result?.message ?? "Could not load your bookings. Please try again."

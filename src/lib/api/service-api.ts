@@ -1,5 +1,5 @@
 import { getTokenFromClient } from "@/lib/getTokenFromClient";
-import { missingToken } from "@/lib/api/api-error";
+import { guardResponse, missingToken } from "@/lib/api/api-error";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
@@ -78,6 +78,7 @@ export async function addService(payload: ServicePayload): Promise<ServiceRecord
     service?: ServiceRecord;
   } | null;
 
+  guardResponse(response.status, result?.message);
   if (!response.ok || !result?.success || !result.service) {
     throw new ServiceApiError(
       result?.message ?? "Could not submit your service. Please try again.",
@@ -109,6 +110,7 @@ export async function getAdminServices(
     services?: ServiceRecord[];
   } | null;
 
+  guardResponse(response.status, result?.message);
   if (!response.ok || !result?.success || !result.services) {
     throw new ServiceApiError(
       result?.message ?? "Could not load services. Please try again."
@@ -137,6 +139,7 @@ export async function updateServiceStatus(
     service?: ServiceRecord;
   } | null;
 
+  guardResponse(response.status, result?.message);
   if (!response.ok || !result?.success || !result.service) {
     throw new ServiceApiError(
       result?.message ?? "Could not update the service. Please try again."
@@ -150,6 +153,7 @@ export type ServiceFilters = {
   search?: string;
   category?: string;
   location?: string;
+  sort?: "newest" | "price_asc" | "price_desc";
 };
 
 export async function getPublicServices(
@@ -160,6 +164,7 @@ export async function getPublicServices(
   if (filters.search?.trim()) params.set("search", filters.search.trim());
   if (filters.category?.trim()) params.set("category", filters.category.trim());
   if (filters.location?.trim()) params.set("location", filters.location.trim());
+  if (filters.sort && filters.sort !== "newest") params.set("sort", filters.sort);
 
   const query = params.toString();
   const response = await fetch(`${BASE_URL}/services${query ? `?${query}` : ""}`, {
@@ -172,6 +177,7 @@ export async function getPublicServices(
     services?: ServiceRecord[];
   } | null;
 
+  guardResponse(response.status, result?.message);
   if (!response.ok || !result?.success || !result.services) {
     throw new ServiceApiError(
       result?.message ?? "Could not load services. Please try again."
@@ -193,6 +199,7 @@ export async function getMyServices(): Promise<ServiceRecord[]> {
     services?: ServiceRecord[];
   } | null;
 
+  guardResponse(response.status, result?.message);
   if (!response.ok || !result?.success || !result.services) {
     throw new ServiceApiError(
       result?.message ?? "Could not load your services. Please try again."
@@ -214,6 +221,7 @@ export async function getVendorStats(): Promise<VendorStats> {
     stats?: VendorStats;
   } | null;
 
+  guardResponse(response.status, result?.message);
   if (!response.ok || !result?.success || !result.stats) {
     throw new ServiceApiError(
       result?.message ?? "Could not load your dashboard. Please try again."
@@ -235,6 +243,7 @@ export async function getVendorServiceById(id: string): Promise<ServiceRecord> {
     service?: ServiceRecord;
   } | null;
 
+  guardResponse(response.status, result?.message);
   if (!response.ok || !result?.success || !result.service) {
     throw new ServiceApiError(
       result?.message ?? "Could not load the service. Please try again."
@@ -264,6 +273,7 @@ export async function updateService(
     service?: ServiceRecord;
   } | null;
 
+  guardResponse(response.status, result?.message);
   if (!response.ok || !result?.success || !result.service) {
     throw new ServiceApiError(
       result?.message ?? "Could not update the service. Please try again.",
@@ -285,6 +295,7 @@ export async function deleteService(id: string): Promise<void> {
     message?: string;
   } | null;
 
+  guardResponse(response.status, result?.message);
   if (!response.ok || !result?.success) {
     throw new ServiceApiError(
       result?.message ?? "Could not delete the service. Please try again."
@@ -311,6 +322,7 @@ export async function setServiceAvailability(
     service?: ServiceRecord;
   } | null;
 
+  guardResponse(response.status, result?.message);
   if (!response.ok || !result?.success || !result.service) {
     throw new ServiceApiError(
       result?.message ?? "Could not update availability. Please try again."
@@ -318,6 +330,27 @@ export async function setServiceAvailability(
   }
 
   return result.service;
+}
+
+export async function getFeaturedServices(): Promise<ServiceRecord[]> {
+  const response = await fetch(`${BASE_URL}/featured-services`, {
+    cache: "no-store",
+  });
+
+  const result = (await response.json().catch(() => null)) as {
+    success?: boolean;
+    message?: string;
+    services?: ServiceRecord[];
+  } | null;
+
+  guardResponse(response.status, result?.message);
+  if (!response.ok || !result?.success || !result.services) {
+    throw new ServiceApiError(
+      result?.message ?? "Could not load featured services. Please try again."
+    );
+  }
+
+  return result.services;
 }
 
 export async function getPublicServiceById(id: string): Promise<ServiceRecord> {
@@ -331,6 +364,7 @@ export async function getPublicServiceById(id: string): Promise<ServiceRecord> {
     service?: ServiceRecord;
   } | null;
 
+  guardResponse(response.status, result?.message);
   if (!response.ok || !result?.success || !result.service) {
     throw new ServiceApiError(
       result?.message ?? "Could not load the service. Please try again."

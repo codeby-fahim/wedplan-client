@@ -32,8 +32,8 @@ export default function GlobalError({
           Something went wrong on our side. You can try again or head back to
           safety.
         </p>
-        {error.message && (
-          <p className="muted-text mt-3 rounded-lg bg-(--surface-muted) px-3 py-2 text-left text-xs">
+        {error.message && process.env.NODE_ENV !== "production" && (
+          <p className="muted-text mt-3 break-words rounded-lg bg-(--surface-muted) px-3 py-2 text-left text-xs">
             {error.message}
           </p>
         )}

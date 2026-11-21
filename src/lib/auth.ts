@@ -160,7 +160,14 @@ export const auth = betterAuth({
             data: {
               ...user,
               role,
-              businessName: role === "vendor" ? user.businessName ?? null : null,
+              businessName:
+                role === "vendor"
+                  ? (typeof user.businessName === "string"
+                      ? user.businessName.trim()
+                      : "") ||
+                    user.name ||
+                    "Wedding Vendor"
+                  : null,
               // Platform-managed fields are always forced server-side.
               isBlocked: false,
               subscriptionPlan: "free",

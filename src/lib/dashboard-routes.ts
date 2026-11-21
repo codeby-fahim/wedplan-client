@@ -29,8 +29,17 @@ export function getDashboardHref(role: unknown): string {
 export function getSafeCallbackHref(callbackUrl: unknown, role: unknown): string {
   const home = getDashboardHref(role);
 
+  if (typeof callbackUrl !== "string") return home;
+
+  // Service details and the profile shortcut are valid for any signed-in role.
   if (
-    typeof callbackUrl !== "string" ||
+    /^\/services\/[A-Za-z0-9]+$/.test(callbackUrl) ||
+    callbackUrl === "/profile"
+  ) {
+    return callbackUrl;
+  }
+
+  if (
     !/^\/dashboard\/[A-Za-z0-9/_-]*$/.test(callbackUrl) ||
     (callbackUrl !== home && !callbackUrl.startsWith(`${home}/`))
   ) {

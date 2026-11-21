@@ -11,6 +11,10 @@ export async function GET(request: Request) {
     return Response.redirect(new URL("/sign-in?error=session", request.url));
   }
 
+  if ((session.user as { isBlocked?: boolean }).isBlocked) {
+    return Response.redirect(new URL("/sign-in?error=blocked", request.url));
+  }
+
   const role = (session.user as { role?: string }).role;
   const callbackUrl = new URL(request.url).searchParams.get("callbackUrl");
   const destination = getSafeCallbackHref(callbackUrl, role);

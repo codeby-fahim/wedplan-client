@@ -196,7 +196,7 @@ export default function DashboardShell({
             onClick={() => setMenuOpen(false)}
             className="absolute inset-0 bg-black/50"
           />
-          <aside className="absolute inset-y-0 left-0 w-72 max-w-[85%] border-r border-border bg-(--surface) shadow-xl">
+          <aside className="absolute top-16 bottom-0 left-0 h-[calc(100dvh-4rem)] w-72 max-w-[85%] border-r border-border bg-(--surface) shadow-xl">
             <button
               type="button"
               onClick={() => setMenuOpen(false)}
@@ -211,7 +211,7 @@ export default function DashboardShell({
       )}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-16 z-40 flex h-14 items-center gap-3 border-b border-border bg-(--surface)/90 px-4 backdrop-blur sm:px-6">
+        <header className="static z-40 flex h-14 items-center gap-3 border-b border-border bg-(--surface)/90 px-4 backdrop-blur sm:sticky sm:top-16 sm:px-6">
           <button
             type="button"
             onClick={() => setMenuOpen(true)}
@@ -223,7 +223,7 @@ export default function DashboardShell({
           <h2 className="font-heading truncate text-base font-semibold text-(--text-primary)">
             {DASHBOARD_LABELS[role]}
           </h2>
-          <span className="muted-text ml-auto hidden text-xs sm:block">
+          <span className="muted-text ml-auto hidden max-w-[45vw] truncate text-xs sm:block">
             {user.email}
           </span>
         </header>

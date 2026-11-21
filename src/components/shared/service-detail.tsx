@@ -119,7 +119,7 @@ export default function ServiceDetail() {
             </div>
 
             {service.images && service.images.length > 1 && (
-              <div className="mt-3 grid grid-cols-3 gap-3">
+              <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {service.images.slice(1).map((image, index) => (
                   <div
                     key={`${image}-${index}`}
@@ -198,8 +198,7 @@ export default function ServiceDetail() {
           </div>
 
           <div className="lg:sticky lg:top-24 lg:self-start">
-            {service.isActive &&
-            (service.status === "approved" || service.status === "pending") ? (
+            {service.isActive && service.status === "approved" ? (
               <BookingForm service={service} />
             ) : (
               <div className="theme-card p-6">

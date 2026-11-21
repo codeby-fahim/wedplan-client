@@ -39,7 +39,14 @@ import {
   type ServiceRecord,
 } from "@/lib/api/service-api";
 import { authClient } from "@/lib/auth-client";
-import { SERVICE_CATEGORIES } from "@/lib/service-categories";
+import { FEATURED_CATEGORIES, SERVICE_CATEGORIES } from "@/lib/service-categories";
+
+const CATEGORY_OPTIONS = Array.from(
+  new Set<string>([
+    ...SERVICE_CATEGORIES,
+    ...FEATURED_CATEGORIES.map((item) => item.query),
+  ])
+);
 
 export default function PublicServicesGrid() {
   const router = useRouter();
@@ -55,8 +62,22 @@ export default function PublicServicesGrid() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
   const [location, setLocation] = useState("");
+  const [sort, setSort] = useState<"newest" | "price_asc" | "price_desc">(
+    "newest"
+  );
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [debouncedLocation, setDebouncedLocation] = useState("");
+
+  // A category card can deep-link here; keep in sync with browser navigation.
+  useEffect(() => {
+    const sync = () => {
+      setCategory(new URLSearchParams(window.location.search).get("category") ?? "");
+    };
+
+    queueMicrotask(sync);
+    window.addEventListener("popstate", sync);
+    return () => window.removeEventListener("popstate", sync);
+  }, []);
 
   // Debounce text inputs so we don't hit the API on every keystroke.
   useEffect(() => {
@@ -96,13 +117,14 @@ export default function PublicServicesGrid() {
         search: debouncedSearch,
         category,
         location: debouncedLocation,
+        sort,
       });
     });
 
     return () => {
       active = false;
     };
-  }, [load, debouncedSearch, category, debouncedLocation, requestId]);
+  }, [load, debouncedSearch, category, debouncedLocation, sort, requestId]);
 
   const hasFilters = Boolean(search.trim() || category || location.trim());
 
@@ -110,6 +132,7 @@ export default function PublicServicesGrid() {
     setSearch("");
     setCategory("");
     setLocation("");
+    setSort("newest");
   };
 
   const openDetails = (id: string) => {
@@ -173,7 +196,7 @@ export default function PublicServicesGrid() {
           </h2>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Field>
             <FieldLabel htmlFor="service-search">Search by name</FieldLabel>
             <div className="relative">
@@ -198,7 +221,7 @@ export default function PublicServicesGrid() {
                 <SelectValue placeholder="All categories" />
               </SelectTrigger>
               <SelectContent>
-                {SERVICE_CATEGORIES.map((item) => (
+                {CATEGORY_OPTIONS.map((item) => (
                   <SelectItem key={item} value={item}>
                     {item}
                   </SelectItem>
@@ -222,6 +245,27 @@ export default function PublicServicesGrid() {
                 onChange={(event) => setLocation(event.target.value)}
               />
             </div>
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="service-sort">Sort by</FieldLabel>
+            <Select
+              value={sort}
+              onValueChange={(value) =>
+                setSort(
+                  (value ?? "newest") as "newest" | "price_asc" | "price_desc"
+                )
+              }
+            >
+              <SelectTrigger id="service-sort">
+                <SelectValue placeholder="Newest first" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Newest first</SelectItem>
+                <SelectItem value="price_asc">Price: low to high</SelectItem>
+                <SelectItem value="price_desc">Price: high to low</SelectItem>
+              </SelectContent>
+            </Select>
           </Field>
         </div>
 

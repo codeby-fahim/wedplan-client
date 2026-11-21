@@ -1,19 +1,25 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+
+import { auth } from "@/lib/auth";
+import { getDashboardHref, isDashboardRole } from "@/lib/dashboard-routes";
 
 export const metadata: Metadata = {
   title: "Profile Settings",
   description: "Manage your WedPlan account settings.",
 };
 
-export default function ProfilePage() {
-  return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
-      <h1 className="font-heading text-3xl font-semibold text-[var(--text-primary)]">
-        Profile Settings
-      </h1>
-      <p className="muted-text mt-2">
-        Your profile settings will live here.
-      </p>
-    </main>
-  );
+export default async function ProfilePage() {
+  const session = await auth.api.getSession({ headers: await headers() });
+
+  if (!session) {
+    redirect("/sign-in?callbackUrl=/profile");
+  }
+
+  if (!isDashboardRole(session.user.role)) {
+    redirect("/sign-in?error=session");
+  }
+
+  redirect(`${getDashboardHref(session.user.role)}/profile`);
 }
