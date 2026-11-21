@@ -10,6 +10,10 @@ export const metadata: Metadata = {
   description: "Manage your WedPlan account settings.",
 };
 
+// This page verifies the session on the server before redirecting, so it is
+// allowed to block instead of producing an instant navigation.
+export const instant = false;
+
 export default async function ProfilePage() {
   const session = await auth.api.getSession({ headers: await headers() });
 
