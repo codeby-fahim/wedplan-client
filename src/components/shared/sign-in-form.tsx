@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -86,6 +86,17 @@ export default function SignInForm({
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState<"email" | "google" | null>(null);
 
+  // Never show credentials or a stale "signed in" message when this form
+  // is mounted again (e.g. after sign-out or a client-side back navigation).
+  useEffect(() => {
+    queueMicrotask(() => {
+      setValues({ email: "", password: "" });
+      setErrors({});
+      setShowPassword(false);
+      setNotice(oauthNotice(oauthError));
+    });
+  }, [oauthError]);
+
   const setValue = (key: keyof typeof values, value: string) => {
     setValues((current) => ({ ...current, [key]: value }));
     setErrors((current) => ({ ...current, [key]: undefined }));
@@ -125,6 +136,9 @@ export default function SignInForm({
       // The sign-in response includes the user's additional fields (role).
       const role = (result.data?.user as { role?: string } | undefined)?.role;
       const destination = getSafeCallbackHref(callbackUrl, role);
+
+      // Drop the credentials as soon as they are no longer needed.
+      setValues({ email: "", password: "" });
 
       setNotice({
         type: "success",
@@ -215,7 +229,7 @@ export default function SignInForm({
           </Alert>
         )}
 
-        <form onSubmit={handleSubmit} noValidate className="space-y-5">
+        <form onSubmit={handleSubmit} noValidate autoComplete="off" className="space-y-5">
           <FieldGroup>
             <Field data-invalid={Boolean(errors.email)}>
               <FieldLabel htmlFor="email">Email</FieldLabel>
@@ -223,7 +237,7 @@ export default function SignInForm({
                 id="email"
                 name="email"
                 type="email"
-                autoComplete="email"
+                autoComplete="off"
                 placeholder="you@example.com"
                 value={values.email}
                 onChange={(event) => setValue("email", event.target.value)}
@@ -251,7 +265,7 @@ export default function SignInForm({
                   id="password"
                   name="password"
                   type={showPassword ? "text" : "password"}
-                  autoComplete="current-password"
+                  autoComplete="new-password"
                   placeholder="Enter your password"
                   className="pr-10"
                   value={values.password}

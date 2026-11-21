@@ -114,6 +114,25 @@ export default function SignUpForm({
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState<"email" | "google" | null>(null);
 
+  // Reset any stale credentials/notices when this form is mounted again.
+  useEffect(() => {
+    queueMicrotask(() => {
+      setValues(initialValues);
+      setErrors({});
+      setShowPassword(false);
+      setNotice(
+        oauthError
+          ? {
+              type: "error",
+              title: "Google sign-in failed",
+              message:
+                "We couldn't complete your Google sign-in. Please try again or use email registration.",
+            }
+          : null
+      );
+    });
+  }, [oauthError]);
+
   useEffect(() => {
     return () => {
       if (imagePreview) URL.revokeObjectURL(imagePreview);
@@ -193,13 +212,18 @@ export default function SignUpForm({
         return;
       }
 
+      const destination = getDashboardHref(values.role);
+
+      setValues(initialValues);
+      setImageFile(null);
+      setImagePreview(null);
+      setShowPassword(false);
       setNotice({
         type: "success",
         title: "Welcome to WedPlan!",
         message: "Your account is ready. Taking you to your dashboard...",
       });
 
-      const destination = getDashboardHref(values.role);
       window.setTimeout(() => {
         router.push(destination);
         router.refresh();
@@ -307,7 +331,7 @@ export default function SignUpForm({
                 id="email"
                 name="email"
                 type="email"
-                autoComplete="email"
+                autoComplete="off"
                 placeholder="you@example.com"
                 value={values.email}
                 onChange={(event) => setValue("email", event.target.value)}
