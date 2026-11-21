@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   AlertCircle,
@@ -26,10 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getVendorStats, type VendorStats } from "@/lib/api/service-api";
-import {
-  createCheckoutSession,
-  verifyPayment,
-} from "@/lib/api/subscription-api";
+import { createCheckoutSession } from "@/lib/api/subscription-api";
 import { cn } from "@/lib/utils";
 
 const FREE_FEATURES = [
@@ -45,8 +41,6 @@ const PREMIUM_FEATURES = [
 ];
 
 export default function VendorSubscription() {
-  const router = useRouter();
-
   const [stats, setStats] = useState<VendorStats | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [requestId, setRequestId] = useState(0);
@@ -91,45 +85,18 @@ export default function VendorSubscription() {
     }
   };
 
-  // Handle the redirect back from Stripe sandbox checkout.
+  // Cancelled checkouts return here. Successful ones go to /success, which
+  // only reads server-confirmed status — it never activates a plan itself.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const payment = params.get("payment");
-    const sessionId = params.get("session_id");
 
-    if (payment) {
-      window.history.replaceState({}, "", window.location.pathname);
-    }
+    if (params.get("payment") !== "cancelled") return;
 
-    if (payment === "cancelled") {
-      toast.info("Checkout cancelled", {
-        description: "You can upgrade whenever you're ready.",
-      });
-    }
-
-    if (payment === "success") {
-      if (!sessionId) return;
-
-      void (async () => {
-        try {
-          await verifyPayment(sessionId);
-          setStats((current) =>
-            current
-              ? { ...current, subscriptionPlan: "premium", activeServiceLimit: null }
-              : current
-          );
-          toast.success("Welcome to Premium!", {
-            description: "You can now publish unlimited active services.",
-          });
-          router.refresh();
-        } catch (err) {
-          toast.error("Could not confirm your payment", {
-            description: err instanceof Error ? err.message : "Please try again.",
-          });
-        }
-      })();
-    }
-  }, [router]);
+    window.history.replaceState({}, "", window.location.pathname);
+    toast.info("Checkout cancelled", {
+      description: "You can upgrade whenever you're ready.",
+    });
+  }, []);
 
   if (error) {
     return (

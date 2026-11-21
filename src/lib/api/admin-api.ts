@@ -29,13 +29,11 @@ export type AdminTransaction = {
   vendorId: string | null;
   vendorName: string;
   vendorEmail: string | null;
-  subscriptionPlan: string;
+  plan: string;
   amount: number;
   currency: string;
-  paymentStatus: string;
-  transactionDate: string;
-  stripeSessionId?: string;
-  stripeSubscriptionId?: string | null;
+  status: string;
+  createdAt: string | null;
 };
 
 async function getAuthHeader(): Promise<HeadersInit> {

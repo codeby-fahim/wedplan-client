@@ -19,11 +19,15 @@ import {
 } from "@/lib/api/admin-api";
 
 function formatAmount(amount: number, currency: string) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: currency.toUpperCase(),
-    minimumFractionDigits: 2,
-  }).format(amount / 100);
+  return `${new Intl.NumberFormat("en-US").format(amount)} ${currency.toUpperCase()}`;
+}
+
+function statusClass(status: string) {
+  if (status === "paid")
+    return "bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))]";
+  if (status === "pending")
+    return "bg-[hsl(var(--warning))] text-[hsl(var(--warning-foreground))]";
+  return "bg-secondary text-secondary-foreground";
 }
 
 function formatDate(value: string) {
@@ -156,18 +160,18 @@ export default function AdminTransactionsList() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 capitalize">{transaction.subscriptionPlan}</td>
+                  <td className="px-4 py-3 capitalize">{transaction.plan}</td>
                   <td className="px-4 py-3 font-medium">
                     {formatAmount(transaction.amount, transaction.currency)}
                   </td>
                   <td className="px-4 py-3">
-                    <Badge className="bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))]">
+                    <Badge className={statusClass(transaction.status)}>
                       <CheckCircle2 size={12} />
-                      {transaction.paymentStatus}
+                      {transaction.status}
                     </Badge>
                   </td>
                   <td className="muted-text px-4 py-3 text-xs">
-                    {formatDate(transaction.transactionDate)}
+                    {transaction.createdAt ? formatDate(transaction.createdAt) : "—"}
                   </td>
                 </tr>
               ))}

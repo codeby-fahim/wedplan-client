@@ -101,7 +101,9 @@ export default function VendorBookingsList() {
     try {
       const updated = await updateBookingStatus(booking.id, status);
       setBookings((current) =>
-        current.map((item) => (item.id === updated.id ? updated : item))
+        status === "rejected"
+          ? current.filter((item) => item.id !== updated.id)
+          : current.map((item) => (item.id === updated.id ? updated : item))
       );
       toast.success(`Booking ${status}`, {
         description: `${booking.customerName} · ${booking.serviceName}`,
@@ -170,7 +172,7 @@ export default function VendorBookingsList() {
   return (
     <div className="space-y-5">
       <p className="muted-text text-sm">
-        {bookings.length} request{bookings.length === 1 ? "" : "s"} · {pending} pending
+        {bookings.length} active request{bookings.length === 1 ? "" : "s"} · {pending} pending
       </p>
 
       <div className="space-y-4">

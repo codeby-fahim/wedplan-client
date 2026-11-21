@@ -147,25 +147,22 @@ export async function getCustomerStats(): Promise<CustomerStats> {
   return result.stats;
 }
 
-export async function cancelBooking(id: string): Promise<BookingRecord> {
+export async function cancelBooking(id: string): Promise<void> {
   const response = await fetch(`${BASE_URL}/customer/bookings/${id}/cancel`, {
-    method: "PATCH",
+    method: "DELETE",
     headers: await getAuthHeader(),
   });
 
   const result = (await response.json().catch(() => null)) as {
     success?: boolean;
     message?: string;
-    booking?: BookingRecord;
   } | null;
 
-  if (!response.ok || !result?.success || !result.booking) {
+  if (!response.ok || !result?.success) {
     throw new ServiceApiError(
       result?.message ?? "Could not cancel your request. Please try again."
     );
   }
-
-  return result.booking;
 }
 
 export async function getCustomerBookings(): Promise<BookingRecord[]> {

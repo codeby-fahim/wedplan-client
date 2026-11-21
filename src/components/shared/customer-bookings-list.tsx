@@ -122,11 +122,9 @@ export default function CustomerBookingsList() {
     setPendingCancel(null);
 
     try {
-      const updated = await cancelBooking(target.id);
-      setBookings((current) =>
-        current.map((item) => (item.id === updated.id ? updated : item))
-      );
-      toast.success("Booking request cancelled", {
+      await cancelBooking(target.id);
+      setBookings((current) => current.filter((item) => item.id !== target.id));
+      toast.success("Booking request cancelled and removed", {
         description: target.serviceName,
       });
     } catch (err) {
@@ -277,6 +275,15 @@ export default function CustomerBookingsList() {
                       >
                         Cancel Request
                       </Button>
+                    )}
+
+                    {booking.status === "rejected" && (
+                      <Link
+                        href={`/services/${booking.serviceId}`}
+                        className={cn(buttonVariants({ size: "sm", variant: "outline" }), "rounded-full")}
+                      >
+                        Request Again
+                      </Link>
                     )}
                   </div>
                 </div>

@@ -3,6 +3,17 @@ import { ServiceApiError } from "@/lib/api/service-api";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
+export type SubscriptionStatus = {
+  plan: "free" | "premium";
+  transaction: {
+    plan: string;
+    amount: number;
+    currency: string;
+    status: string;
+    createdAt: string;
+  } | null;
+};
+
 async function authHeader(): Promise<HeadersInit> {
   const token = await getTokenFromClient();
 
@@ -34,20 +45,33 @@ export async function createCheckoutSession(): Promise<string> {
   return result.url;
 }
 
-export async function verifyPayment(sessionId: string): Promise<void> {
+/** Read-only — the browser cannot activate a plan through this endpoint. */
+export async function getSubscriptionStatus(
+  sessionId?: string
+): Promise<SubscriptionStatus> {
+  const query = sessionId
+    ? `?sessionId=${encodeURIComponent(sessionId)}`
+    : "";
   const response = await fetch(
-    `${BASE_URL}/vendor/subscription/verify?sessionId=${encodeURIComponent(sessionId)}`,
+    `${BASE_URL}/vendor/subscription/status${query}`,
     { headers: await authHeader(), cache: "no-store" }
   );
 
   const result = (await response.json().catch(() => null)) as {
     success?: boolean;
     message?: string;
+    plan?: "free" | "premium";
+    transaction?: SubscriptionStatus["transaction"];
   } | null;
 
   if (!response.ok || !result?.success) {
     throw new ServiceApiError(
-      result?.message ?? "Could not verify your payment. Please try again."
+      result?.message ?? "Could not load your payment status. Please try again."
     );
   }
+
+  return {
+    plan: result.plan ?? "free",
+    transaction: result.transaction ?? null,
+  };
 }

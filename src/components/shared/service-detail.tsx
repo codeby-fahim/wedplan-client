@@ -198,15 +198,16 @@ export default function ServiceDetail() {
           </div>
 
           <div className="lg:sticky lg:top-24 lg:self-start">
-            {service.status === "approved" && service.isActive ? (
+            {service.isActive &&
+            (service.status === "approved" || service.status === "pending") ? (
               <BookingForm service={service} />
             ) : (
               <div className="theme-card p-6">
                 <div className="flex items-start gap-2 rounded-lg border border-(--brand)/20 bg-(--brand-soft)/50 px-3 py-2.5 text-xs text-(--text-secondary)">
                   <AlertCircle size={15} className="mt-0.5 shrink-0 text-(--brand)" />
                   <p>
-                    This service is <strong className="text-(--text-primary)">pending approval</strong>{" "}
-                    and isn&apos;t available for booking yet. Please check back soon.
+                    This service is <strong className="text-(--text-primary)">no longer available</strong>{" "}
+                    for booking. Please browse other services.
                   </p>
                 </div>
               </div>
