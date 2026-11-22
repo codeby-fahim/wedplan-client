@@ -191,7 +191,7 @@ export default function VendorServicesList() {
   const atFreeLimit =
     stats !== null &&
     stats.activeServiceLimit !== null &&
-    stats.activeServices >= stats.activeServiceLimit;
+    stats.totalServices >= stats.activeServiceLimit;
 
   return (
     <div className="space-y-5">
@@ -215,7 +215,7 @@ export default function VendorServicesList() {
           <p>
             You&apos;ve reached the free plan limit of{" "}
             <strong className="text-(--text-primary)">
-              {stats.activeServiceLimit} active services
+              {stats.activeServiceLimit} services
             </strong>
             . Upgrade to Premium to publish unlimited services.
           </p>

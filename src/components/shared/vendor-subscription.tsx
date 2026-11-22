@@ -155,7 +155,7 @@ export default function VendorSubscription() {
           <p className="muted-text mt-1 text-sm">
             {isPremium
               ? "You have unlimited active services."
-              : `${stats.activeServices} of ${stats.activeServiceLimit} active services used.`}
+              : `${stats.totalServices} of ${stats.activeServiceLimit} services used.`}
           </p>
         </div>
         {!isPremium && (

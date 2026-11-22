@@ -113,7 +113,7 @@ export default function VendorOverview() {
       hint:
         stats.activeServiceLimit === null
           ? "Approved and visible to customers"
-          : `${stats.activeServiceLimit - stats.activeServices} free-plan slot${stats.activeServiceLimit - stats.activeServices === 1 ? "" : "s"} left`,
+          : `${Math.max(stats.activeServiceLimit - stats.totalServices, 0)} of ${stats.activeServiceLimit} free-plan slots left`,
     },
     {
       label: "Pending Requests",
