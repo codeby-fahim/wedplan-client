@@ -45,17 +45,17 @@ const SignInPage = async ({ searchParams }: SignInPageProps) => {
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -right-40 -bottom-40 size-[28rem] rounded-full bg-(--brand)/10 blur-3xl"
+        className="pointer-events-none absolute -right-40 -bottom-40 size-112 rounded-full bg-(--brand)/10 blur-3xl"
       />
 
       <div className="relative grid w-full max-w-5xl items-center gap-10 lg:grid-cols-2 lg:gap-16">
         <section className="hidden lg:block">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[var(--brand)]/25 bg-[var(--brand-soft)] px-3 py-1 text-xs font-medium text-[var(--brand)]">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-(--brand)/25 bg-(--brand-soft) px-3 py-1 text-xs font-medium text-(--brand)">
             <HeartHandshake size={14} />
             Welcome back to WedPlan
           </div>
 
-          <h1 className="font-heading text-4xl leading-[1.15] font-semibold tracking-tight text-[var(--text-primary)] xl:text-5xl">
+          <h1 className="font-heading text-4xl leading-[1.15] font-semibold tracking-tight text-(--text-primary) xl:text-5xl">
             Every great celebration{" "}
             <span className="text-[var(--brand)]">starts here.</span>
           </h1>

@@ -57,6 +57,18 @@ export const auth = betterAuth({
     enabled: true,
     minPasswordLength: 6,
   },
+
+  // Surface the real cause in Vercel function logs (e.g. Mongo network
+  // errors) instead of returning an opaque 500 to the browser.
+  onAPIError: {
+    onError: (error, ctx) => {
+      console.error(
+        "[auth] request failed:",
+        (ctx as { path?: string } | undefined)?.path,
+        error
+      );
+    },
+  },
   // These must match JWT_ISSUER / JWT_AUDIENCE on the API server — it
   // verifies both claims on every authenticated request.
   plugins: [
