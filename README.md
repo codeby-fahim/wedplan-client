@@ -1,62 +1,196 @@
-# WedPlan
+# WedPlan — Client
 
-Wedding-planning platform with a Next.js 16 client and a separate Express API (`wedplan-server`).
+[![Next.js](https://img.shields.io/badge/Next.js-16.4.6-black?logo=next.js)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19.3-blue?logo=react)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.3-38bdf8?logo=tailwindcss)](https://tailwindcss.com/)
+[![Better Auth](https://img.shields.io/badge/Auth-Better%20Auth-7c3aed)](https://www.better-auth.com/)
+[![Stripe](https://img.shields.io/badge/Payments-Stripe-635bff?logo=stripe)](https://stripe.com/)
 
-## Local setup
+The frontend for **WedPlan**, a wedding-planning marketplace connecting couples with wedding vendors. It is built with the Next.js App Router, React Server Components, shadcn/base-ui components, Better Auth, and a separate Express API.
 
-```bash
-# client
-cp .env.example .env
-npm install
-npm run dev        # http://localhost:3000
+| Resource | Link |
+| --- | --- |
+| 🚀 Live application | [wedplan-client-eta.vercel.app](https://wedplan-client-eta.vercel.app) |
+| 📦 Source code | [github.com/codeby-fahim/wedplan-client](https://github.com/codeby-fahim/wedplan-client.git) |
+| 🔧 API server | [wedplan-server-kohl.vercel.app](https://wedplan-server-kohl.vercel.app) |
+| 📦 API source | [github.com/codeby-fahim/wedplan-server](https://github.com/codeby-fahim/wedplan-server.git) |
 
-# server (in ../wedplan-server)
-cp .env.example .env
-npm install
-npm start          # http://localhost:5000
+---
+
+## Features
+
+- **Public browsing** — search, category and location filters, plus price sorting on approved wedding services
+- **Service details** — image gallery, vendor information, and authenticated booking requests
+- **Authentication** — email/password and Google OAuth via Better Auth, with role-based redirects
+- **Vendor dashboard** — service CRUD, availability management, booking requests, subscription plans, and Stripe Checkout
+- **Customer dashboard** — booking overview, request history, cancellation of pending requests, and profile settings
+- **Admin dashboard** — platform statistics, user management (block/unblock), service moderation, and read-only transaction records
+- **Premium subscriptions** — free plan limited to 3 services; Premium unlocks unlimited listings
+- **Photo uploads** — image files uploaded to ImgBB through a validated server route handler
+- **UX** — responsive layouts, motion animations, skeleton loaders, toast notifications, and graceful error states
+
+---
+
+## Tech stack
+
+| Layer | Technology |
+| --- | --- |
+| Framework | Next.js 16 (App Router, Cache Components, Turbopack) |
+| UI | React 19, Tailwind CSS 4, shadcn (base-nova), @base-ui/react, lucide-react |
+| Animation | Motion (`motion/react`) |
+| Auth | Better Auth with MongoDB adapter and JWT plugin |
+| Database | MongoDB Atlas (shared with the API) |
+| Payments | Stripe Checkout + signed webhooks |
+| Notifications | Sonner |
+| Validation | Zod (via Better Auth) and server-side route validation |
+
+---
+
+## Project structure
+
+```
+src/
+├── app/
+│   ├── (public)/            # sign-in, sign-up, profile redirect
+│   ├── (dashboard)/         # role-protected dashboard layouts and pages
+│   │   └── dashboard/
+│   │       ├── vendor/      # overview, services, bookings, subscription, profile
+│   │       ├── customer/    # overview, bookings, profile
+│   │       └── admin/       # overview, users, services, transactions, profile
+│   ├── api/
+│   │   ├── auth/[...all]/   # Better Auth handler
+│   │   ├── post-login/      # role-aware OAuth landing
+│   │   └── upload-image/    # validated ImgBB proxy
+│   ├── services/[id]/       # public service details
+│   └── layout.tsx           # fonts, theme, navbar, footer, toaster
+├── components/
+│   ├── shared/              # auth, dashboard, forms, lists, states
+│   ├── home/                # homepage sections
+│   ├── providers/           # theme provider
+│   └── ui/                  # shadcn primitives
+├── lib/
+│   ├── api/                 # typed Express API clients
+│   ├── auth.ts              # Better Auth configuration
+│   ├── auth-client.ts       # browser auth client
+│   ├── dashboard.ts         # server-side role guards
+│   └── ...
+├── hooks/                   # sign-out hook
+├── proxy.ts                 # optimistic dashboard cookie gate
+└── scripts/seed-admin.mjs   # admin bootstrap utility
 ```
 
-Fill in `.env` on both sides. `JWT_ISSUER` / `JWT_AUDIENCE` must match, and `BETTER_AUTH_URL` / `CLIENT_URL` must point to the **client** origin.
+> Authoritative role checks happen in `src/lib/dashboard.ts` inside Server Components. `proxy.ts` is only an optimistic first gate.
 
-## Admin credentials
+---
 
-Public registration can only create `vendor` and `customer` accounts. To create or reset an admin:
+## Getting started
+
+### Prerequisites
+
+- Node.js 20+
+- A MongoDB Atlas cluster
+- A Google OAuth client (optional, for Google sign-in)
+- An ImgBB API key
+- A Stripe account in test mode (optional, for Premium checkout)
+
+### 1. Install
 
 ```bash
-# client/.env
-ADMIN_EMAIL=admin@admin.com
-ADMIN_PASSWORD=Admin@123
-ADMIN_NAME=WedPlan Admin
-
-npm run seed:admin
+git clone https://github.com/codeby-fahim/wedplan-client.git
+cd wedplan-client
+npm install
 ```
 
-`ADMIN_EMAIL` and `ADMIN_PASSWORD` are required — the script refuses to run with defaults or promote an existing non-admin account. Then sign in at `/sign-in` with those credentials. On a deployed site, set the same variables in the hosting environment and run the script once against the production database.
+### 2. Configure environment
 
-## Stripe sandbox
+```bash
+cp .env.example .env
+```
 
-Set `STRIPE_SECRET_KEY`, `STRIPE_PREMIUM_PRICE_ID` and `STRIPE_WEBHOOK_SECRET` on the **server**. Register a webhook for:
+| Variable | Description |
+| --- | --- |
+| `MONGODB_URL` | MongoDB connection string (same database as the API) |
+| `BETTER_AUTH_SECRET` | Long random secret used to sign session cookies |
+| `BETTER_AUTH_URL` | **This client's** origin — no trailing slash |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth credentials |
+| `IMGBB_API_KEY` | Server-only ImgBB key used by `/api/upload-image` |
+| `NEXT_PUBLIC_API_URL` | Public URL of the Express API |
+| `JWT_ISSUER` / `JWT_AUDIENCE` | Must match the API server values |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Used only by `npm run seed:admin` |
 
-- `checkout.session.completed`
-- `customer.subscription.deleted`
-- `customer.subscription.updated`
-- `invoice.payment_failed`
+### 3. Start the API
 
-For local testing: `stripe listen --forward-to localhost:5000/webhooks/stripe` and use the printed `whsec_…` as `STRIPE_WEBHOOK_SECRET`. Premium is activated **only** by a verified webhook.
+The client depends on the [WedPlan server](https://github.com/codeby-fahim/wedplan-server.git). Run it on `http://localhost:5000` or point `NEXT_PUBLIC_API_URL` at the deployed API.
 
-## Deployment
+### 4. Run the client
 
-- Deploy the Next.js client to Vercel with all client env vars (including `NEXT_PUBLIC_API_URL` pointing to the public API URL).
-- Deploy the Express API to a public HTTPS host (Render, Railway, Fly.io, etc.). It cannot run as a long-lived process on Vercel without conversion.
-- Set `CLIENT_URL` and `BETTER_AUTH_URL` on the server to the public client origin — this fixes CORS, JWKS-based JWT verification and Stripe return URLs.
-- Ensure all routes are served through the Next.js app so refreshes of `/dashboard/*` and `/services/[id]` resolve correctly (the proxy + server layouts handle auth).
-- Never expose `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `IMGBB_API_KEY`, `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_SECRET` or `MONGODB_URL` to the browser. Only `NEXT_PUBLIC_*` values are public.
+```bash
+npm run dev     # http://localhost:3000
+```
+
+---
+
+## Admin account
+
+Public registration can only create `vendor` and `customer` accounts. To create an admin:
+
+```bash
+ADMIN_EMAIL=admin@example.com ADMIN_PASSWORD='StrongPass123' npm run seed:admin
+```
+
+The script refuses to run with missing credentials or to promote an existing non-admin account. Sign in at `/sign-in` with those credentials.
+
+---
+
+## Stripe sandbox setup
+
+1. Create a recurring **test-mode** Price in Stripe.
+2. Set `STRIPE_SECRET_KEY`, `STRIPE_PREMIUM_PRICE_ID`, and `STRIPE_WEBHOOK_SECRET` on the **API server**.
+3. Register a webhook pointing to `https://<api-domain>/webhooks/stripe` for:
+   - `checkout.session.completed`
+   - `customer.subscription.deleted`
+   - `customer.subscription.updated`
+   - `invoice.payment_failed`
+4. The webhook secret must come from that Dashboard endpoint — not from a temporary `stripe listen` session.
+
+Premium is activated only after a verified Stripe event or server-side session verification. The browser redirect alone never changes a plan.
+
+---
 
 ## Scripts
 
-| Command | Purpose |
+| Command | Description |
 | --- | --- |
-| `npm run dev` | Development server |
-| `npm run build` | Production build |
-| `npm run lint` | ESLint |
-| `npm run seed:admin` | Create/reset the admin account from env |
+| `npm run dev` | Start the development server |
+| `npm run build` | Production build with type checking |
+| `npm run start` | Serve the production build |
+| `npm run lint` | Run ESLint |
+| `npm run seed:admin` | Create or reset the admin account from env vars |
+
+---
+
+## Deployment
+
+Deploy to Vercel with all environment variables configured. Remember:
+
+- `BETTER_AUTH_URL` and `CLIENT_URL` (on the API) must be the **client** origin.
+- `NEXT_PUBLIC_*` variables are baked at build time — redeploy after changing them.
+- `BETTER_AUTH_SECRET` must be identical across every serverless invocation.
+- MongoDB Atlas must allow connections from Vercel (`0.0.0.0/0`).
+
+---
+
+## Security notes
+
+- JWTs are verified by the API using JWKS from `${BETTER_AUTH_URL}/api/auth/jwks`, with pinned issuer, audience and algorithm.
+- All private API routes re-check authentication, role and resource ownership on the server.
+- Profile updates cannot modify role, subscription, or blocked status — those fields are stripped server-side.
+- Image uploads validate MIME type, magic bytes, and size, and are rate-limited.
+- Payment records are read-only to admins and can only be created/confirmed from verified Stripe data.
+
+---
+
+## License
+
+MIT — built for demonstration and evaluation purposes.
