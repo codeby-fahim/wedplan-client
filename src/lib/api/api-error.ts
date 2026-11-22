@@ -1,21 +1,26 @@
-/** A 401 means the session is gone — send the user back to sign in rather
- *  than leaving them staring at a stale dashboard with failing requests.
- *  A 403 with a "blocked" message means an admin revoked access. */
+/** A 401 from a single API call does NOT mean the user is signed out — the
+ *  JWT endpoint can fail transiently on serverless. Dashboard access is
+ *  already guarded by the proxy + server layouts, so just log and let the
+ *  component show its error/retry state instead of bouncing to /sign-in.
+ *  An explicitly blocked account IS a hard access revocation, so redirect. */
 export function guardResponse(status: number, message?: unknown): void {
   if (typeof window === "undefined") return;
 
   const text = typeof message === "string" ? message : "";
-  const go = (path: string) =>
-    window.location.assign(new URL(path, window.location.origin).toString());
 
   if (status === 401) {
-    go("/sign-in?error=session");
-  } else if (status === 403 && /blocked/i.test(text)) {
-    go("/sign-in?error=blocked");
+    console.warn("[api] unauthorized response:", text || "no message");
+    return;
+  }
+
+  if (status === 403 && /blocked/i.test(text)) {
+    window.location.assign(
+      new URL("/sign-in?error=blocked", window.location.origin).toString()
+    );
   }
 }
 
 /** Kept for callers that know they have no token at all. */
 export function missingToken(): void {
-  guardResponse(401);
+  console.warn("[api] no JWT available for this request");
 }

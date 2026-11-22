@@ -126,10 +126,18 @@ export const auth = betterAuth({
     before: createAuthMiddleware(async (ctx) => {
       if (ctx.path === "/sign-up/email") {
         const body = (ctx.body ?? {}) as {
+          name?: unknown;
           password?: unknown;
           role?: unknown;
           businessName?: unknown;
         };
+
+        if (typeof body.name !== "string" || !body.name.trim()) {
+          throw new APIError("BAD_REQUEST", {
+            code: "NAME_REQUIRED",
+            message: "Full name is required.",
+          });
+        }
 
         assertValidPassword(body.password);
 
@@ -184,6 +192,7 @@ export const auth = betterAuth({
           return {
             data: {
               ...user,
+              name: user.name?.trim() || "WedPlan User",
               role,
               businessName:
                 role === "vendor"
