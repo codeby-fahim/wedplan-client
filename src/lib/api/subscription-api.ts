@@ -48,6 +48,30 @@ export async function createCheckoutSession(): Promise<string> {
   return result.url;
 }
 
+/** Asks the server to verify the session with Stripe directly. Safe because
+ *  the server re-fetches the session with the secret key and checks ownership. */
+export async function confirmPayment(sessionId: string): Promise<void> {
+  const response = await fetch(`${BASE_URL}/vendor/subscription/confirm`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeader()),
+    },
+    body: JSON.stringify({ sessionId }),
+  });
+
+  const result = (await response.json().catch(() => null)) as {
+    success?: boolean;
+    message?: string;
+  } | null;
+
+  if (!response.ok || !result?.success) {
+    throw new ServiceApiError(
+      result?.message ?? "Could not confirm your payment. Please try again."
+    );
+  }
+}
+
 /** Read-only — the browser cannot activate a plan through this endpoint. */
 export async function getSubscriptionStatus(
   sessionId?: string

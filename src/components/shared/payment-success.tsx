@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import {
   AlertCircle,
   CheckCircle2,
@@ -14,10 +15,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
+  confirmPayment,
   getSubscriptionStatus,
   type SubscriptionStatus,
 } from "@/lib/api/subscription-api";
 import { cn } from "@/lib/utils";
+
+function currentSessionId() {
+  if (typeof window === "undefined") return "";
+  return new URLSearchParams(window.location.search).get("session_id") ?? "";
+}
 
 const STATUS_MESSAGES: Record<string, { title: string; description: string }> = {
   paid: {
@@ -48,19 +55,16 @@ export default function PaymentSuccess() {
   const [status, setStatus] = useState<SubscriptionStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [confirming, setConfirming] = useState(false);
   const [requestId, setRequestId] = useState(0);
+  const confirmedRef = useRef<string | null>(null);
 
   const load = useCallback(async (active: boolean) => {
     setLoading(true);
     setError(null);
 
-    const sessionId =
-      typeof window === "undefined"
-        ? ""
-        : new URLSearchParams(window.location.search).get("session_id") ?? "";
-
     try {
-      const data = await getSubscriptionStatus(sessionId || undefined);
+      const data = await getSubscriptionStatus(currentSessionId() || undefined);
       if (active) setStatus(data);
     } catch (err) {
       if (active) {
@@ -80,6 +84,37 @@ export default function PaymentSuccess() {
       active = false;
     };
   }, [load, requestId]);
+
+  const confirm = useCallback(async () => {
+    const sessionId = currentSessionId();
+    if (!sessionId || confirming) return;
+
+    setConfirming(true);
+
+    try {
+      await confirmPayment(sessionId);
+      toast.success("Payment confirmed — Premium is active!");
+      setRequestId((current) => current + 1);
+    } catch (err) {
+      toast.error("Could not confirm payment", {
+        description: err instanceof Error ? err.message : "Please try again.",
+      });
+    } finally {
+      setConfirming(false);
+    }
+  }, [confirming]);
+
+  // If the webhook was missed, ask the server to verify with Stripe directly.
+  useEffect(() => {
+    const sessionId = currentSessionId();
+    if (!sessionId || status?.transaction?.status !== "pending") return;
+    if (confirmedRef.current === sessionId) return;
+
+    confirmedRef.current = sessionId;
+    queueMicrotask(() => {
+      void confirm();
+    });
+  }, [status?.transaction?.status, confirm]);
 
   const message = STATUS_MESSAGES[status?.transaction?.status ?? "pending"];
 
@@ -146,6 +181,20 @@ export default function PaymentSuccess() {
         )}
 
         <div className="mt-6 flex flex-wrap justify-center gap-3">
+          {status?.transaction?.status === "pending" && (
+            <Button
+              onClick={() => void confirm()}
+              disabled={confirming}
+              className="rounded-full"
+            >
+              {confirming ? (
+                <RefreshCw className="animate-spin" />
+              ) : (
+                <CheckCircle2 />
+              )}
+              {confirming ? "Confirming..." : "Confirm payment"}
+            </Button>
+          )}
           <Button
             variant="outline"
             onClick={() => setRequestId((current) => current + 1)}
@@ -169,8 +218,9 @@ export default function PaymentSuccess() {
           <AlertCircle size={15} className="mt-0.5 shrink-0 text-(--brand)" />
         )}
         <p>
-          Premium access is never activated from this page. Only a signed
-          Stripe webhook can confirm your payment and update your plan.
+          This page never trusts the redirect alone. The server verifies the
+          session directly with Stripe using your secret key and only then
+          activates Premium.
         </p>
       </div>
     </div>
