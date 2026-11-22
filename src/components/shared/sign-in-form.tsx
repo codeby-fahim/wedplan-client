@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   AlertCircle,
   Check,
@@ -76,7 +75,6 @@ export default function SignInForm({
   oauthError?: string;
   callbackUrl?: string;
 }) {
-  const router = useRouter();
 
   const [values, setValues] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -147,10 +145,13 @@ export default function SignInForm({
       });
 
       window.setTimeout(() => {
-        // replace() avoids a back-button loop to /sign-in. Do NOT call
-        // refresh() here — it can cancel the in-flight navigation.
-        router.replace(destination);
-      }, 900);
+        // A full navigation guarantees the server renders the destination
+        // with the newly-set session cookie (the App Router client cache
+        // can otherwise leave us on /sign-in).
+        window.location.assign(
+          new URL(destination, window.location.origin).toString()
+        );
+      }, 600);
     } catch {
       setNotice({
         type: "error",

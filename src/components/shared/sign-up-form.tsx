@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   AlertCircle,
@@ -95,7 +94,6 @@ export default function SignUpForm({
 }: {
   oauthError?: string;
 }) {
-  const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [values, setValues] = useState<FormValues>(initialValues);
@@ -226,7 +224,9 @@ export default function SignUpForm({
       });
 
       window.setTimeout(() => {
-        router.replace(destination);
+        window.location.assign(
+          new URL(destination, window.location.origin).toString()
+        );
       }, 1200);
     } catch (error) {
       setNotice({

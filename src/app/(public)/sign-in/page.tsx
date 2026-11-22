@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { CalendarCheck, HeartHandshake, Sparkles, Store } from "lucide-react";
 
+import AuthRedirectGuard from "@/components/shared/auth-redirect-guard";
 import SignInForm from "@/components/shared/sign-in-form";
 
 // Reads searchParams on the server; allow this route to block at prerender time.
@@ -39,6 +40,7 @@ const SignInPage = async ({ searchParams }: SignInPageProps) => {
 
   return (
     <main className="relative flex min-h-[calc(100vh-4rem)] items-center justify-center overflow-hidden px-4 py-10 sm:px-6 lg:py-14">
+      <AuthRedirectGuard />
       <div
         aria-hidden="true"
         className="pointer-events-none absolute -top-40 -left-40 size-112 rounded-full bg-(--brand)/10 blur-3xl"
