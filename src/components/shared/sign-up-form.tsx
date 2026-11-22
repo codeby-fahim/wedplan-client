@@ -226,8 +226,7 @@ export default function SignUpForm({
       });
 
       window.setTimeout(() => {
-        router.push(destination);
-        router.refresh();
+        router.replace(destination);
       }, 1200);
     } catch (error) {
       setNotice({

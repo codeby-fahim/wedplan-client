@@ -11,7 +11,6 @@ export function useSignOut() {
 
   return async function signOut() {
     await authClient.signOut();
-    router.push("/");
-    router.refresh();
+    router.replace("/");
   };
 }

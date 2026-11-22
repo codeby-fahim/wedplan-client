@@ -269,8 +269,7 @@ export default function AddServiceForm({
             "It is now pending admin approval. You can track the status in My Services.",
         });
         resetForm();
-        router.push("/dashboard/vendor/services");
-        router.refresh();
+        router.replace("/dashboard/vendor/services");
       }
     } catch (error) {
       const message =

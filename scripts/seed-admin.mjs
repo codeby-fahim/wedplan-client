@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { MongoClient, ObjectId } from "mongodb";
+import { MongoClient } from "mongodb";
 import { hashPassword } from "better-auth/crypto";
 
 const email = process.env.ADMIN_EMAIL?.trim().toLowerCase();
@@ -57,7 +57,8 @@ await accounts.updateOne(
   { userId: user._id, providerId: "credential" },
   {
     $set: {
-      accountId: new ObjectId().toString(),
+      // better-auth looks up credentials by accountId === userId.
+      accountId: user._id.toString(),
       password: passwordHash,
       updatedAt: now,
     },

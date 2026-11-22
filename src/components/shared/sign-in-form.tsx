@@ -147,8 +147,9 @@ export default function SignInForm({
       });
 
       window.setTimeout(() => {
-        router.push(destination);
-        router.refresh();
+        // replace() avoids a back-button loop to /sign-in. Do NOT call
+        // refresh() here — it can cancel the in-flight navigation.
+        router.replace(destination);
       }, 900);
     } catch {
       setNotice({
