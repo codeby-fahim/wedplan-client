@@ -16,9 +16,17 @@ type SessionUser = {
   role?: string | null;
 };
 
-/** Read the current better-auth session on the server. */
+/** Read the current better-auth session on the server. A malformed cookie
+ *  or a transient auth failure must not crash a dashboard into the global
+ *  error boundary — treat it as "not signed in" instead. */
 export async function getSession() {
-  return auth.api.getSession({ headers: await headers() });
+  try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    return session?.user ? session : null;
+  } catch (error) {
+    console.error("[dashboard] session read failed:", error);
+    return null;
+  }
 }
 
 /** Require any signed-in user. */

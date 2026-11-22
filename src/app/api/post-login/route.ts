@@ -5,9 +5,15 @@ import { getSafeCallbackHref } from "@/lib/dashboard-routes";
  *  redirects vendors and customers to their own areas. Used by the Google
  *  OAuth callback (and safe to use for credential login too). */
 export async function GET(request: Request) {
-  const session = await auth.api.getSession({ headers: request.headers });
+  let session: Awaited<ReturnType<typeof auth.api.getSession>> = null;
 
-  if (!session) {
+  try {
+    session = await auth.api.getSession({ headers: request.headers });
+  } catch (error) {
+    console.error("[post-login] session read failed:", error);
+  }
+
+  if (!session?.user) {
     return Response.redirect(new URL("/sign-in?error=session", request.url));
   }
 
