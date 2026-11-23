@@ -4,30 +4,77 @@ import { jwt } from "better-auth/plugins";
 import { MongoClient } from "mongodb";
 import { mongodbAdapter } from "@better-auth/mongo-adapter";
 
-const globalForMongo = globalThis as typeof globalThis & {
-  __wedplanMongoClient?: MongoClient;
+type MongoAdapter = ReturnType<typeof mongodbAdapter>;
+
+type AuthMongoState = {
+  client: MongoClient;
+  adapter: MongoAdapter;
 };
 
-/** A serverless invocation can inherit a MongoClient whose topology was
- *  closed when a previous request ended. Recreate it before each use so the
- *  adapter never operates on a dead connection. */
-function getDb() {
-  let client: MongoClient | undefined = globalForMongo.__wedplanMongoClient;
+const globalForMongo = globalThis as typeof globalThis & {
+  __wedplanAuthMongo?: AuthMongoState;
+};
 
-  const topology = client as unknown as
-    | { topology?: { isConnected(): boolean } }
-    | undefined;
-  const closed = !client || (topology?.topology ? !topology.topology.isConnected() : false);
-
-  if (!client || closed) {
-    client = new MongoClient(process.env.MONGODB_URL as string);
-    globalForMongo.__wedplanMongoClient = client;
-  }
-
-  return client.db("wedplan");
+function createMongoState(): AuthMongoState {
+  const client = new MongoClient(process.env.MONGODB_URL as string);
+  return {
+    client,
+    adapter: mongodbAdapter(client.db("wedplan"), { client }),
+  };
 }
 
-const db = getDb();
+function getMongoState(): AuthMongoState {
+  if (!globalForMongo.__wedplanAuthMongo) {
+    globalForMongo.__wedplanAuthMongo = createMongoState();
+  }
+  return globalForMongo.__wedplanAuthMongo;
+}
+
+function isClosedTopologyError(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    /Topology is closed|MongoTopologyClosedError/i.test(error.message)
+  );
+}
+
+/**
+ * Better Auth keeps the database adapter at module scope. On Vercel a warm
+ * invocation can inherit a client that was closed after a previous request.
+ * This proxy checks every adapter call and, if the topology is dead, creates
+ * a fresh client + adapter and retries the operation once.
+ */
+const db = new Proxy({} as MongoAdapter, {
+  get(_target, property) {
+    const state = getMongoState();
+    const value = (state.adapter as unknown as Record<string | symbol, unknown>)[
+      property
+    ];
+
+    if (typeof value !== "function") return value;
+
+    return async (...args: unknown[]) => {
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const current = getMongoState();
+        const method = (
+          current.adapter as unknown as Record<
+            string | symbol,
+            (...params: unknown[]) => Promise<unknown>
+          >
+        )[property];
+
+        try {
+          return await method.apply(current.adapter, args);
+        } catch (error) {
+          if (attempt === 0 && isClosedTopologyError(error)) {
+            globalForMongo.__wedplanAuthMongo = createMongoState();
+            continue;
+          }
+          throw error;
+        }
+      }
+    };
+  },
+});
 
 /** The only roles public registration is allowed to create. */
 const PUBLIC_ROLES = ["vendor", "customer"] as const;
@@ -73,7 +120,7 @@ export const auth = betterAuth({
     "http://localhost:3000",
   ].filter((value): value is string => Boolean(value)),
 
-  database: mongodbAdapter(db, { client: globalForMongo.__wedplanMongoClient }),
+  database: () => db,
 
   emailAndPassword: {
     enabled: true,
