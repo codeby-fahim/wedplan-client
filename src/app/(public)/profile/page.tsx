@@ -1,29 +1,34 @@
-import type { Metadata } from "next";
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
+"use client";
 
-import { getAuth } from "@/lib/auth";
-import { getDashboardHref, isDashboardRole } from "@/lib/dashboard-routes";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Profile Settings",
-  description: "Manage your WedPlan account settings.",
-};
+import { authClient } from "@/lib/auth-client";
+import { getSafeCallbackHref } from "@/lib/dashboard-routes";
 
-// This page verifies the session on the server before redirecting, so it is
-// allowed to block instead of producing an instant navigation.
-export const instant = false;
+export default function ProfileRedirectPage() {
+  const router = useRouter();
+  const { data: session, isPending } = authClient.useSession();
+  const [message, setMessage] = useState("Redirecting...");
 
-export default async function ProfilePage() {
-  const session = await getAuth().api.getSession({ headers: await headers() });
+  useEffect(() => {
+    queueMicrotask(() => {
+      if (isPending) return;
 
-  if (!session) {
-    redirect("/sign-in?callbackUrl=/profile");
-  }
+      if (!session) {
+        router.replace("/sign-in?callbackUrl=/profile");
+        return;
+      }
 
-  if (!isDashboardRole(session.user.role)) {
-    redirect("/sign-in?error=session");
-  }
+      const role = (session.user as { role?: string }).role;
+      setMessage("Opening your profile settings...");
+      router.replace(`${getSafeCallbackHref(null, role)}/profile`);
+    });
+  }, [isPending, session, router]);
 
-  redirect(`${getDashboardHref(session.user.role)}/profile`);
+  return (
+    <main className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4">
+      <p className="muted-text text-sm">{message}</p>
+    </main>
+  );
 }
