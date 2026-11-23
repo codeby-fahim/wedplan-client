@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { auth } from "@/lib/auth";
+import { getAuth } from "@/lib/auth";
 import {
   getDashboardHref,
   isDashboardRole,
@@ -20,8 +20,10 @@ type SessionUser = {
  *  or a transient auth failure must not crash a dashboard into the global
  *  error boundary — treat it as "not signed in" instead. */
 export async function getSession() {
+  const requestHeaders = await headers();
+
   try {
-    const session = await auth.api.getSession({ headers: await headers() });
+    const session = await getAuth().api.getSession({ headers: requestHeaders });
     return session?.user ? session : null;
   } catch (error) {
     console.error("[dashboard] session read failed:", error);

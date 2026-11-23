@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { auth } from "@/lib/auth";
+import { getAuth } from "@/lib/auth";
 import { getDashboardHref, isDashboardRole } from "@/lib/dashboard-routes";
 
 export const metadata: Metadata = {
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 export const instant = false;
 
 export default async function ProfilePage() {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getAuth().api.getSession({ headers: await headers() });
 
   if (!session) {
     redirect("/sign-in?callbackUrl=/profile");

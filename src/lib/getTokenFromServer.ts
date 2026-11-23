@@ -1,8 +1,8 @@
 import { headers } from "next/headers";
-import { auth } from "./auth"
+import { getAuth } from "./auth"
 
 export const getTokenFromServer = async()=>{
-  const jwtToken = await auth.api.getToken({
+  const jwtToken = await getAuth().api.getToken({
     headers: await headers()
   });
   const token = jwtToken?.token;

@@ -4,77 +4,35 @@ import { jwt } from "better-auth/plugins";
 import { MongoClient } from "mongodb";
 import { mongodbAdapter } from "@better-auth/mongo-adapter";
 
-type MongoAdapter = ReturnType<typeof mongodbAdapter>;
-
-type AuthMongoState = {
+type AuthCache = {
   client: MongoClient;
-  adapter: MongoAdapter;
+  auth: ReturnType<typeof buildAuth>;
 };
 
-const globalForMongo = globalThis as typeof globalThis & {
-  __wedplanAuthMongo?: AuthMongoState;
+const globalForAuth = globalThis as typeof globalThis & {
+  __wedplanAuthCache?: AuthCache;
 };
 
-function createMongoState(): AuthMongoState {
-  const client = new MongoClient(process.env.MONGODB_URL as string);
-  return {
-    client,
-    adapter: mongodbAdapter(client.db("wedplan"), { client }),
+function createClient(): MongoClient {
+  const uri = process.env.MONGODB_URL;
+  if (!uri) throw new Error("MONGODB_URL is missing in environment variables.");
+
+  return new MongoClient(uri, {
+    maxPoolSize: 10,
+    minPoolSize: 0,
+    maxIdleTimeMS: 10000,
+    connectTimeoutMS: 10000,
+    socketTimeoutMS: 45000,
+    serverSelectionTimeoutMS: 10000,
+  });
+}
+
+function clientIsClosed(client: MongoClient): boolean {
+  const topology = client as unknown as {
+    topology?: { isConnected(): boolean };
   };
+  return topology.topology ? !topology.topology.isConnected() : false;
 }
-
-function getMongoState(): AuthMongoState {
-  if (!globalForMongo.__wedplanAuthMongo) {
-    globalForMongo.__wedplanAuthMongo = createMongoState();
-  }
-  return globalForMongo.__wedplanAuthMongo;
-}
-
-function isClosedTopologyError(error: unknown): boolean {
-  return (
-    error instanceof Error &&
-    /Topology is closed|MongoTopologyClosedError/i.test(error.message)
-  );
-}
-
-/**
- * Better Auth keeps the database adapter at module scope. On Vercel a warm
- * invocation can inherit a client that was closed after a previous request.
- * This proxy checks every adapter call and, if the topology is dead, creates
- * a fresh client + adapter and retries the operation once.
- */
-const db = new Proxy({} as MongoAdapter, {
-  get(_target, property) {
-    const state = getMongoState();
-    const value = (state.adapter as unknown as Record<string | symbol, unknown>)[
-      property
-    ];
-
-    if (typeof value !== "function") return value;
-
-    return async (...args: unknown[]) => {
-      for (let attempt = 0; attempt < 2; attempt++) {
-        const current = getMongoState();
-        const method = (
-          current.adapter as unknown as Record<
-            string | symbol,
-            (...params: unknown[]) => Promise<unknown>
-          >
-        )[property];
-
-        try {
-          return await method.apply(current.adapter, args);
-        } catch (error) {
-          if (attempt === 0 && isClosedTopologyError(error)) {
-            globalForMongo.__wedplanAuthMongo = createMongoState();
-            continue;
-          }
-          throw error;
-        }
-      }
-    };
-  },
-});
 
 /** The only roles public registration is allowed to create. */
 const PUBLIC_ROLES = ["vendor", "customer"] as const;
@@ -106,7 +64,10 @@ function assertValidPassword(value: unknown): void {
   }
 }
 
-export const auth = betterAuth({
+function buildAuth(client: MongoClient) {
+  const db = client.db("wedplan");
+
+  return betterAuth({
   // Be explicit on Vercel — never rely on framework origin inference.
   baseURL: process.env.BETTER_AUTH_URL,
 
@@ -120,7 +81,7 @@ export const auth = betterAuth({
     "http://localhost:3000",
   ].filter((value): value is string => Boolean(value)),
 
-  database: () => db,
+  database: mongodbAdapter(db, { client }),
 
   emailAndPassword: {
     enabled: true,
@@ -281,4 +242,22 @@ export const auth = betterAuth({
       },
     },
   },
-});
+  });
+}
+
+/**
+ * Returns a Better Auth instance backed by a healthy MongoClient. A warm
+ * serverless invocation can inherit a client whose topology was closed after
+ * a previous request; in that case we discard it and build a fresh one.
+ */
+export function getAuth(): ReturnType<typeof buildAuth> {
+  const cached = globalForAuth.__wedplanAuthCache;
+
+  if (cached && !clientIsClosed(cached.client)) return cached.auth;
+
+  const client = createClient();
+  const auth = buildAuth(client);
+  globalForAuth.__wedplanAuthCache = { client, auth };
+
+  return auth;
+}

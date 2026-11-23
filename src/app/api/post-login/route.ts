@@ -1,14 +1,14 @@
-import { auth } from "@/lib/auth";
+import { getAuth } from "@/lib/auth";
 import { getSafeCallbackHref } from "@/lib/dashboard-routes";
 
 /** Shared post-authentication landing: resolves the role server-side and
  *  redirects vendors and customers to their own areas. Used by the Google
  *  OAuth callback (and safe to use for credential login too). */
 export async function GET(request: Request) {
-  let session: Awaited<ReturnType<typeof auth.api.getSession>> = null;
+  let session: Awaited<ReturnType<ReturnType<typeof getAuth>["api"]["getSession"]>> = null;
 
   try {
-    session = await auth.api.getSession({ headers: request.headers });
+    session = await getAuth().api.getSession({ headers: request.headers });
   } catch (error) {
     console.error("[post-login] session read failed:", error);
   }
