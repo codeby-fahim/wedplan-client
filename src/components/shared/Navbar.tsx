@@ -26,9 +26,9 @@ const Navbar = () => {
             width={44}
             height={44}
             priority
-            className="h-11 w-11 rounded-full bg-white object-contain p-1 shadow-sm ring-1 ring-(--brand)/20 transition-transform duration-300 group-hover:scale-105"
+            className="h-10 w-10 rounded-full bg-white object-contain p-1 shadow-sm ring-1 ring-(--brand)/20 transition-transform duration-300 group-hover:scale-105 sm:h-11 sm:w-11"
           />
-          <span className="font-heading hidden text-xl font-semibold tracking-tight text-(--text-primary) sm:block">
+          <span className="font-heading whitespace-nowrap text-lg font-semibold tracking-tight text-(--text-primary) sm:text-xl">
             Wed<span className="text-(--brand)">Plan</span>
           </span>
         </Link>

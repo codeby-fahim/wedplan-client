@@ -4,8 +4,30 @@ import { jwt } from "better-auth/plugins";
 import { MongoClient } from "mongodb";
 import { mongodbAdapter } from "@better-auth/mongo-adapter";
 
-const client = new MongoClient(process.env.MONGODB_URL as string);
-const db = client.db("wedplan");
+const globalForMongo = globalThis as typeof globalThis & {
+  __wedplanMongoClient?: MongoClient;
+};
+
+/** A serverless invocation can inherit a MongoClient whose topology was
+ *  closed when a previous request ended. Recreate it before each use so the
+ *  adapter never operates on a dead connection. */
+function getDb() {
+  let client: MongoClient | undefined = globalForMongo.__wedplanMongoClient;
+
+  const topology = client as unknown as
+    | { topology?: { isConnected(): boolean } }
+    | undefined;
+  const closed = !client || (topology?.topology ? !topology.topology.isConnected() : false);
+
+  if (!client || closed) {
+    client = new MongoClient(process.env.MONGODB_URL as string);
+    globalForMongo.__wedplanMongoClient = client;
+  }
+
+  return client.db("wedplan");
+}
+
+const db = getDb();
 
 /** The only roles public registration is allowed to create. */
 const PUBLIC_ROLES = ["vendor", "customer"] as const;
@@ -51,7 +73,7 @@ export const auth = betterAuth({
     "http://localhost:3000",
   ].filter((value): value is string => Boolean(value)),
 
-  database: mongodbAdapter(db, { client }),
+  database: mongodbAdapter(db, { client: globalForMongo.__wedplanMongoClient }),
 
   emailAndPassword: {
     enabled: true,
